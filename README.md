@@ -1,5 +1,7 @@
 # Knowledge Wiki Template
 
+> English | [简体中文](README.zh-CN.md) | [繁體中文（台灣）](README.zh-TW.md)
+
 A template for building a personal knowledge wiki powered by AI. Add your own notes and documents; the AI skills maintain an interconnected wiki in `Wiki/` automatically.
 
 ## Setup
