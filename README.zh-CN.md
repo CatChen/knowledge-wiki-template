@@ -36,7 +36,7 @@ qmd collection add ~/path/to/your/knowledge-wiki --name knowledge
 
 先索引文件，再生成向量嵌入。`update` 和 `embed` 是两个独立步骤 —— `embed` 只处理已在索引中的内容。
 
-默认嵌入模型对 CJK 字符的支持有限。请改用 Qwen 模型以获得更好的中英文效果：
+默认嵌入模型对 CJK 字符的支持有限。请改用 Qwen 模型以获得更好的英文、普通话及粤语效果：
 
 ```shellscript
 qmd update --collection knowledge
@@ -85,7 +85,7 @@ codex mcp add qmd -- qmd mcp
 
 ### 10. 添加你的内容
 
-创建任意适合你需求的目录结构，例如 `Notes/`、`Ideas/`、`Docs/`、`Journals/`。维基技能会扫描仓库中所有 Markdown 文件（排除 `Wiki/`、`.claude/`、`README.md`、`AGENTS.md` 和 `CLAUDE.md`），因此你添加的任何 `.md` 文件都可以被摘要处理。
+创建任意适合你需求的目录结构，例如 `Notes/`、`Ideas/`、`Docs/`、`Journals/`。维基技能会扫描仓库中所有 Markdown 文件（排除 `Wiki/`、`.claude/`、`README.md` 及本地化版本、`AGENTS.md` 和 `CLAUDE.md`），因此你添加的任何 `.md` 文件都可以被摘要处理。
 
 ### 11. 使用技能
 
@@ -110,6 +110,6 @@ Run the skill at .claude/skills/knowledge-wiki-summary
 | `/knowledge-wiki-synthesis` | 积累新概念后定期运行 —— 发现跨领域联系并撰写综合文章                   |
 | `/knowledge-wiki-lint`      | 定期运行，尤其是重新组织源文件后 —— 修复孤立摘要、断链和孤立概念       |
 | `/knowledge-wiki-merge`     | 定期运行 —— 交互式会话，识别并合并重复的概念文章                       |
-| `/knowledge-wiki-enrich`    | 定期运行 —— 使用网络搜索扩展内容较少的概念文章（< 4 段正文，≤ 2 个来源）|
+| `/knowledge-wiki-enrich`    | 定期运行 —— 使用网络搜索扩展内容较少的概念文章（< 4 行正文，≤ 2 个来源）|
 
 定期技能（`/knowledge-wiki-synthesis`、`/knowledge-wiki-lint`、`/knowledge-wiki-enrich`）也可以使用 Claude 桌面应用的内置定时功能配置为按计划运行，让维基自动保持最新。

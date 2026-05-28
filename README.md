@@ -85,7 +85,7 @@ codex mcp add qmd -- qmd mcp
 
 ### 10. Add Your Content
 
-Create any folder structure that fits your needs — for example `Notes/`, `Ideas/`, `Docs/`, `Journals/`. The wiki skills scan all Markdown files in the repo (excluding `Wiki/`, `.claude/`, `README.md`, `AGENTS.md`, and `CLAUDE.md`), so any `.md` file you add becomes eligible for summarization.
+Create any folder structure that fits your needs — for example `Notes/`, `Ideas/`, `Docs/`, `Journals/`. The wiki skills scan all Markdown files in the repo (excluding `Wiki/`, `.claude/`, `README.md` and localized variants, `AGENTS.md`, and `CLAUDE.md`), so any `.md` file you add becomes eligible for summarization.
 
 ### 11. Use the Skills
 

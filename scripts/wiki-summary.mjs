@@ -36,6 +36,8 @@ const EXCLUDE = [
   'Wiki/',
   'Types/',
   '*/README.md',
+  '*/README.zh-CN.md',
+  '*/README.zh-TW.md',
   'AGENTS.md',
   'CLAUDE.md',
   '.claude/',
