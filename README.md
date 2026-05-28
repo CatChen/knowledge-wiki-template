@@ -81,13 +81,25 @@ claude plugin install qmd@qmd
 codex mcp add qmd -- qmd mcp
 ```
 
-## Adding Your Content
+### 10. Add Your Content
 
 Create any folder structure that fits your needs — for example `Notes/`, `Ideas/`, `Docs/`, `Journals/`. The wiki skills scan all Markdown files in the repo (excluding `Wiki/`, `.claude/`, `README.md`, `AGENTS.md`, and `CLAUDE.md`), so any `.md` file you add becomes eligible for summarization.
 
-## Wiki Skills
+### 11. Use the Skills
 
-The `Wiki/` directory is maintained by a set of Claude Code skills. Run them in order after adding or editing source files.
+The skills live in `.claude/skills/` and are designed to be invoked by an AI agent. **Claude Code** (the [macOS desktop app](https://claude.ai/download) or [CLI](https://docs.anthropic.com/en/docs/claude-code)) is the recommended tool — type the skill name as a slash command:
+
+```
+/knowledge-wiki-summary
+```
+
+Other agents (Codex, etc.) can also run the skills by specifying the full path, for example:
+
+```
+Run the skill at .claude/skills/knowledge-wiki-summary
+```
+
+Run the skills in order after adding or editing source files:
 
 | Skill                       | When to run                                                                                                                |
 | --------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -97,3 +109,5 @@ The `Wiki/` directory is maintained by a set of Claude Code skills. Run them in 
 | `/knowledge-wiki-lint`      | Periodically, especially after reorganizing source files — repairs orphan summaries, broken wikilinks, and orphan concepts |
 | `/knowledge-wiki-merge`     | Periodically — interactive session to identify and merge duplicate concept articles                                        |
 | `/knowledge-wiki-enrich`    | Periodically — expands thin concept articles (< 4 prose lines, ≤ 2 sources) using web search                              |
+
+The periodic skills (`/knowledge-wiki-synthesis`, `/knowledge-wiki-lint`, `/knowledge-wiki-enrich`) can also be configured to run on a schedule using the Claude desktop app's built-in scheduling feature, so the wiki stays fresh automatically.
