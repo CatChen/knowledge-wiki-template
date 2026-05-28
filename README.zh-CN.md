@@ -1,6 +1,6 @@
 # 知识维基模板
 
-> [English](README.md) | 简体中文 | [繁體中文（台灣）](README.zh-TW.md)
+> [English](README.md) | 简体中文 | [繁體中文](README.zh-TW.md)
 
 一个由 AI 驱动的个人知识维基模板。添加你自己的笔记和文档，AI 技能会自动在 `Wiki/` 目录中维护一套相互关联的维基。
 

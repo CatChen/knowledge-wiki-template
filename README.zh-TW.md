@@ -1,6 +1,6 @@
 # 知識維基範本
 
-> [English](README.md) | [简体中文](README.zh-CN.md) | 繁體中文（台灣）
+> [English](README.md) | [简体中文](README.zh-CN.md) | 繁體中文
 
 一個由 AI 驅動的個人知識維基範本。新增你自己的筆記和文件，AI 技能會自動在 `Wiki/` 目錄中維護一套相互連結的維基。
 
