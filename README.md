@@ -4,9 +4,9 @@ A template for building a personal knowledge wiki powered by AI. Add your own no
 
 ## Setup
 
-### 1. Use the correct Node version
+### 1. Install Node.js 24
 
-This repo requires Node.js 24. With nvm:
+Download and install Node.js from [nodejs.org](https://nodejs.org/) — the installer sets up `nvm` automatically. Then activate the version pinned in `.nvmrc`:
 
 ```shellscript
 nvm use
@@ -14,9 +14,7 @@ nvm use
 
 ### 2. Install ripgrep
 
-```shellscript
-brew install ripgrep
-```
+Follow the [official ripgrep installation instructions](https://github.com/BurntSushi/ripgrep#installation) for your platform.
 
 ### 3. Install qmd
 
@@ -85,7 +83,7 @@ codex mcp add qmd -- qmd mcp
 
 ## Adding Your Content
 
-Create any folder structure that fits your needs — for example `Notes/`, `Ideas/`, `Docs/`, `Journals/`. The wiki skills scan all Markdown files in the repo (excluding `Wiki/` itself and `.claude/`), so any `.md` file you add becomes eligible for summarization.
+Create any folder structure that fits your needs — for example `Notes/`, `Ideas/`, `Docs/`, `Journals/`. The wiki skills scan all Markdown files in the repo (excluding `Wiki/`, `.claude/`, `README.md`, `AGENTS.md`, and `CLAUDE.md`), so any `.md` file you add becomes eligible for summarization.
 
 ## Wiki Skills
 
