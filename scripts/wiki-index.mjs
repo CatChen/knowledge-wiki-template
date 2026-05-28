@@ -1,7 +1,7 @@
 /**
  * wiki-index.mjs
  *
- * Atomic reads and writes to Wiki/index.md.
+ * Reads and writes Wiki/index.md.
  * Skills should call this instead of reading the whole file and writing it back.
  *
  * Usage:

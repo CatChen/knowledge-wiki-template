@@ -159,7 +159,7 @@ node {KNOWLEDGE_PATH}/scripts/wiki-state.mjs set-last-run knowledge-wiki-synthes
 ### 7. Print summary
 
 ```
-Synthesised {N} concept(s) from {M} candidate(s):
+Synthesized {N} concept(s) from {M} candidate(s):
 
   ✓ Created: {proposed_slug} — {proposed_title}
       Type: {cross-cutting | relationship | contradiction | gap}

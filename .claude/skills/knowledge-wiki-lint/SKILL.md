@@ -1,6 +1,6 @@
 ---
 name: knowledge-wiki-lint
-description: 'Audit and repair the knowledge wiki. Detects orphan summaries (source deleted), broken wikilinks, and orphan concept files. Run periodically after accumulating new content or reorganising source files.'
+description: 'Audit and repair the knowledge wiki. Detects orphan summaries (source deleted), broken wikilinks, and orphan concept files. Run periodically after accumulating new content or reorganizing source files.'
 ---
 
 # Knowledge Wiki Lint

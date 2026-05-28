@@ -44,6 +44,8 @@ const EXCLUDE = [
   '.codex/',
   '.planning/',
   '.clawpatch/',
+  '.git/',
+  'node_modules/',
 ];
 
 function isExcluded(relPath, isDir) {

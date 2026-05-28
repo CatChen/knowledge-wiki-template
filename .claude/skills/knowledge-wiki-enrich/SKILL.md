@@ -23,7 +23,7 @@ Run:
 node {KNOWLEDGE_PATH}/scripts/find-thin-concepts.mjs
 ```
 
-Output is `{ "concepts": [...] }` — an array of concept file paths sorted by `proseLines + sources` ascending, so the thinnest concepts come first. A concept is thin if it has fewer than 4 non-empty prose lines AND at most 2 entries in its `## Sources` section.
+Output is `{ "concepts": [...] }` — an array of concept file paths sorted by word count ascending, so the thinnest concepts come first. A concept is thin if it has fewer than 150 words in its body AND at most 2 entries in its `## Sources` section.
 
 If the array is empty, print `No thin concepts found.` and stop.
 

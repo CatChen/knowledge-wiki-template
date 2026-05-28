@@ -43,6 +43,11 @@ function countSources(body) {
 
 const concepts = [];
 
+if (!fs.existsSync(CONCEPTS_DIR)) {
+  console.log(JSON.stringify({ concepts: [] }, null, 2));
+  process.exit(0);
+}
+
 for (const entry of fs.readdirSync(CONCEPTS_DIR, { withFileTypes: true })) {
   if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
   const fullPath = path.join(CONCEPTS_DIR, entry.name);

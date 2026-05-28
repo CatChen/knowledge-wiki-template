@@ -39,6 +39,11 @@ function findSummaryFiles(dir, results = []) {
   return results;
 }
 
+if (!fs.existsSync(WIKI_SUMMARIES_DIR)) {
+  console.log(JSON.stringify({}, null, 2));
+  process.exit(0);
+}
+
 const summaryFiles = findSummaryFiles(WIKI_SUMMARIES_DIR);
 const result = {};
 

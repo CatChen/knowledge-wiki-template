@@ -46,6 +46,7 @@ const state = fs.existsSync(STATE_FILE)
   : {};
 
 function saveState() {
+  fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2) + '\n');
 }
 
@@ -81,6 +82,10 @@ if (subcommand === 'find-unprocessed-summaries') {
   }
 
   const result = [];
+  if (!fs.existsSync(WIKI_SUMMARIES_DIR)) {
+    console.log(JSON.stringify(result, null, 2));
+    process.exit(0);
+  }
   for (const fullPath of findSummaryFiles(WIKI_SUMMARIES_DIR)) {
     const relPath = path.relative(KNOWLEDGE_DIR, fullPath);
     if (lastRunTime === null) {

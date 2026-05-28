@@ -82,7 +82,7 @@ for (const fromRel of backlinkFiles) {
   const original = fs.readFileSync(fullPath, 'utf8');
   const lines = original.split('\n');
   const result = lines.map((line, i) => {
-    if (!line.includes(secondaryLinkMarker)) return line;
+    if (!secondaryLinkRe.test(line)) return line;
 
     const { start, end } = listBlockAround(lines, i);
     const block = lines.slice(start, end + 1);
