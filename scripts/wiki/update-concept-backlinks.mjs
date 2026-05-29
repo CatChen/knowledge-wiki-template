@@ -30,7 +30,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { buildWikiGraph } from './wiki-graph-lib.mjs';
 
-const KNOWLEDGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const KNOWLEDGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 const [secondaryPath, primaryPath, primaryDisplayName] = process.argv.slice(2);
 if (!secondaryPath || !primaryPath || !primaryDisplayName) {

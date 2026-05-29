@@ -27,7 +27,7 @@ import { extractBody } from './wiki-graph-lib.mjs';
 
 process.stdout.on('error', err => { if (err.code === 'EPIPE') process.exit(0); });
 
-const KNOWLEDGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const KNOWLEDGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 // Paths (relative to KNOWLEDGE_DIR) to skip during traversal.
 // Directories must end with '/'. Files are matched exactly.

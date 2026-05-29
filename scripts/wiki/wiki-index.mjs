@@ -43,7 +43,7 @@ process.stdout.on('error', (err) => {
 
 const KNOWLEDGE_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  '..',
+  '../..',
 );
 const INDEX_PATH = path.join(KNOWLEDGE_DIR, 'Wiki', 'index.md');
 
