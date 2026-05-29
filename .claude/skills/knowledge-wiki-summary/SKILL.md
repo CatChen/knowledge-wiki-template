@@ -11,7 +11,7 @@ Batch process all stale or new knowledge base files and write their wiki summari
 
 ### 1. Establish the working directory
 
-The knowledge base root is the directory containing this skill's `.claude/` folder. Determine it by resolving the path of the `.claude/` directory upward — the parent of `.claude/` is `KNOWLEDGE_PATH`.
+The knowledge base root is the nearest ancestor directory that contains both a `Wiki/` subdirectory and a `Posts/` subdirectory. You can confirm it with `git rev-parse --show-toplevel`. Store the result as `KNOWLEDGE_PATH`.
 
 Use `KNOWLEDGE_PATH` for all subsequent steps.
 
