@@ -26,7 +26,7 @@ _Deletes summary files whose source document has been moved or deleted._
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/find-orphan-summaries.mjs
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs orphan-summaries
 ```
 
 Output is a JSON object keyed by orphan summary file path (relative to `KNOWLEDGE_PATH`). Each value has a `source` field with the path the summary expected to find, or `null` if the frontmatter had no `source` field.
@@ -40,7 +40,7 @@ For each key in the output:
 1. Delete the file at `{KNOWLEDGE_PATH}/{key}`.
 2. Derive the summary's rel-path by stripping the `Wiki/Summaries/` prefix and the `.md` extension from the key. Example: `Wiki/Summaries/Posts/Foo.summary.md` → `Posts/Foo.summary`. Then run:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs delete-summary "{rel-path}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs delete-summary "{rel-path}"
    ```
 
 After processing all orphans, delete any now-empty directories under `Wiki/Summaries/`:
@@ -60,7 +60,7 @@ _Creates missing concept files referenced by summaries._
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/find-broken-summary-links.mjs
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs broken-summary-links
 ```
 
 Output is a JSON object keyed by missing concept file path. Each value has a `referencedBy` array listing the summary files that link to that missing concept.
@@ -92,7 +92,7 @@ _Removes dead bullet points from concept files that link to missing targets._
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/find-broken-concept-links.mjs
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs broken-concept-links
 ```
 
 Output is a JSON object keyed by concept file path. Each value has a `brokenLinks` array of raw wikilink target strings (the text between `[[` and `]]`) that resolve to missing files.
@@ -105,11 +105,11 @@ For each concept file in the output:
 2. For each string in `brokenLinks`, inspect the target to determine which command to run:
    - **If the target starts with `Wiki/Summaries/`** — it is a broken source link. Run:
      ```bash
-     node {KNOWLEDGE_PATH}/scripts/wiki-concept.mjs delete-source "{slug}" "{broken-link-target}"
+     node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs delete-source "{slug}" "{broken-link-target}"
      ```
    - **If the target starts with `Wiki/Concepts/`** — it is a broken connected-concept link. Extract the linked slug by stripping the `Wiki/Concepts/` prefix from the target. Example: `Wiki/Concepts/foo-bar` → `foo-bar`. Run:
      ```bash
-     node {KNOWLEDGE_PATH}/scripts/wiki-concept.mjs delete-connected-concept "{slug}" "{linked-slug}"
+     node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs delete-connected-concept "{slug}" "{linked-slug}"
      ```
    Double-quote all arguments to protect special characters.
 
@@ -124,7 +124,7 @@ _Deletes concept files that nothing links to._
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/find-orphan-concepts.mjs
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs orphan-concepts
 ```
 
 Output is a JSON object keyed by orphan concept file path.
@@ -136,7 +136,7 @@ For each key in the output:
 1. Delete the file at `{KNOWLEDGE_PATH}/{key}`.
 2. Derive the slug (basename of `{key}` without `.md`). Run:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs delete-concept "{slug}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs delete-concept "{slug}"
    ```
 
 ---
@@ -150,7 +150,7 @@ _Removes entries from `Wiki/index.md` that point to files that no longer exist o
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs remove-dead-links
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs remove-dead-links
 ```
 
 Output is a JSON object `{ "concepts": N, "summaries": N }` with the count of deleted entries in each section. The script writes the updated index automatically.
@@ -170,7 +170,7 @@ _Adds index entries for summary files on disk that have no Wikilink in `Wiki/ind
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs find-missing-summaries
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs find-missing-summaries
 ```
 
 Output is a JSON array of rel-paths (e.g. `["AvocadoToast/foo.summary"]`).
@@ -185,7 +185,7 @@ For each rel-path in the array:
 2. Generate a one-line English description of the source document from the `## Summary` section.
 3. Run:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs upsert-summary "{rel-path}" "{description}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-summary "{rel-path}" "{description}"
    ```
 
 ---
@@ -199,7 +199,7 @@ _Adds index entries for concept files on disk that have no Wikilink in `Wiki/ind
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs find-missing-concepts
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs find-missing-concepts
 ```
 
 Output is a JSON array of slugs (e.g. `["autonomous-driving"]`).
@@ -215,7 +215,7 @@ For each slug in the array:
 3. Generate a one-line English description from the file's opening prose.
 4. Run:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs upsert-concept "{slug}" "{display-name}" "{description}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-concept "{slug}" "{display-name}" "{description}"
    ```
 
 ---
@@ -229,7 +229,7 @@ _Removes entries from the merge dismissal list in `Wiki/.state.json` whose conce
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-state.mjs prune-merge-pairs
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs prune-merge-pairs
 ```
 
 Output is a single integer: the number of pairs pruned. If `0`, print `Check 8: no stale dismissed pairs.`

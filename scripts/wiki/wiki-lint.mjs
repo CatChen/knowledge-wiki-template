@@ -1,0 +1,190 @@
+/**
+ * wiki-lint.mjs
+ *
+ * Wiki health checks. Each subcommand is a read-only audit that outputs JSON.
+ *
+ * Usage:
+ *   node scripts/wiki/wiki-lint.mjs <subcommand>
+ *
+ * Subcommands:
+ *   broken-concept-links    Wikilinks inside concept files pointing to missing targets
+ *   broken-summary-links    Wikilinks from summary files to missing concept files
+ *   duplicate-concepts      Concept pairs sharing 2+ source summaries
+ *   orphan-concepts         Concept files with no inbound wikilinks
+ *   orphan-summaries        Summary files whose source document no longer exists
+ *   thin-concepts           Concept files below word/source thresholds (expansion candidates)
+ *   all                     Run all checks; output keyed by subcommand name
+ */
+
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { buildWikiGraph, extractBody } from './wiki-graph-lib.mjs';
+
+const KNOWLEDGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+const STATE_FILE = path.join(KNOWLEDGE_DIR, 'Wiki', '.state.json');
+const WIKI_SUMMARIES_DIR = path.join(KNOWLEDGE_DIR, 'Wiki', 'Summaries');
+const CONCEPTS_DIR = path.join(KNOWLEDGE_DIR, 'Wiki', 'Concepts');
+
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+function parseFrontmatterField(content, field) {
+  if (!content.startsWith('---\n')) return null;
+  const end = content.indexOf('\n---\n', 4);
+  if (end === -1) return null;
+  const frontmatter = content.slice(4, end);
+  const match = frontmatter.match(new RegExp(`^${field}:\\s*(.+)$`, 'm'));
+  return match ? match[1].trim() : null;
+}
+
+function findSummaryFiles(dir, results = []) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) findSummaryFiles(fullPath, results);
+    else if (entry.isFile() && entry.name.endsWith('.summary.md')) results.push(fullPath);
+  }
+  return results;
+}
+
+// ── subcommand implementations ────────────────────────────────────────────────
+
+function brokenConceptLinks() {
+  const { allFiles, links } = buildWikiGraph(KNOWLEDGE_DIR);
+  const result = {};
+  for (const link of links) {
+    if (link.fromType !== 'concept') continue;
+    if (allFiles.has(link.to)) continue;
+    if (!result[link.from]) result[link.from] = { brokenLinks: [] };
+    result[link.from].brokenLinks.push(link.rawTarget);
+  }
+  return result;
+}
+
+function brokenSummaryLinks() {
+  const { allFiles, links } = buildWikiGraph(KNOWLEDGE_DIR);
+  const result = {};
+  for (const link of links) {
+    if (link.fromType !== 'summary') continue;
+    if (link.toType !== 'concept') continue;
+    if (allFiles.has(link.to)) continue;
+    if (!result[link.to]) result[link.to] = { referencedBy: [] };
+    if (!result[link.to].referencedBy.includes(link.from)) result[link.to].referencedBy.push(link.from);
+  }
+  return result;
+}
+
+function duplicateConcepts() {
+  const state = fs.existsSync(STATE_FILE)
+    ? JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
+    : {};
+  const dismissedSet = new Set(
+    (state['knowledge-wiki-merge']?.dismissedPairs ?? [])
+      .map(([a, b]) => [a, b].sort().join('|'))
+  );
+  function isDismissed(a, b) {
+    return dismissedSet.has([a, b].sort().join('|'));
+  }
+
+  const { allFiles, links } = buildWikiGraph(KNOWLEDGE_DIR);
+  const conceptSources = {};
+  for (const link of links) {
+    if (link.fromType !== 'concept' || link.toType !== 'summary') continue;
+    if (!allFiles.has(link.to)) continue;
+    if (!conceptSources[link.from]) conceptSources[link.from] = [];
+    conceptSources[link.from].push(link.to);
+  }
+
+  const concepts = Object.keys(conceptSources);
+  const candidates = [];
+  for (let i = 0; i < concepts.length; i++) {
+    for (let j = i + 1; j < concepts.length; j++) {
+      const a = concepts[i], b = concepts[j];
+      if (isDismissed(a, b)) continue;
+      const setA = new Set(conceptSources[a]);
+      const shared = conceptSources[b].filter(s => setA.has(s));
+      if (shared.length >= 2) candidates.push({ conceptA: a, conceptB: b, sharedSources: shared });
+    }
+  }
+  candidates.sort((a, b) => b.sharedSources.length - a.sharedSources.length);
+  return { candidates };
+}
+
+function orphanConcepts() {
+  const { inboundCounts } = buildWikiGraph(KNOWLEDGE_DIR);
+  const result = {};
+  for (const [relPath, count] of Object.entries(inboundCounts)) {
+    if (count === 0) result[relPath] = {};
+  }
+  return result;
+}
+
+function orphanSummaries() {
+  if (!fs.existsSync(WIKI_SUMMARIES_DIR)) return {};
+  const summaryFiles = findSummaryFiles(WIKI_SUMMARIES_DIR);
+  const result = {};
+  for (const fullPath of summaryFiles) {
+    const content = fs.readFileSync(fullPath, 'utf8');
+    const source = parseFrontmatterField(content, 'source');
+    const summaryRel = path.relative(KNOWLEDGE_DIR, fullPath);
+    if (!source) { result[summaryRel] = { source: null }; continue; }
+    const sourcePath = path.join(KNOWLEDGE_DIR, source);
+    if (!fs.existsSync(sourcePath)) result[summaryRel] = { source };
+  }
+  return result;
+}
+
+function thinConcepts() {
+  const WORD_THRESHOLD = 150;
+  const SOURCE_THRESHOLD = 2;
+  function countWords(body) {
+    return body.split(/\s+/).filter(w => /^[a-zA-Z]+$/.test(w)).length;
+  }
+  function countSources(body) {
+    return body.split('\n').filter(line => /^\s*-\s*\[\[Wiki\/Summaries\//.test(line)).length;
+  }
+  if (!fs.existsSync(CONCEPTS_DIR)) return { concepts: [] };
+  const concepts = [];
+  for (const entry of fs.readdirSync(CONCEPTS_DIR, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
+    const fullPath = path.join(CONCEPTS_DIR, entry.name);
+    const body = extractBody(fs.readFileSync(fullPath, 'utf8'));
+    const wordCount = countWords(body);
+    const sources = countSources(body);
+    if (wordCount < WORD_THRESHOLD && sources <= SOURCE_THRESHOLD) {
+      concepts.push({ _path: 'Wiki/Concepts/' + entry.name, _score: wordCount });
+    }
+  }
+  concepts.sort((a, b) => a._score - b._score);
+  return { concepts: concepts.map(c => c._path) };
+}
+
+// ── dispatch ──────────────────────────────────────────────────────────────────
+
+const COMMANDS = {
+  'broken-concept-links': brokenConceptLinks,
+  'broken-summary-links': brokenSummaryLinks,
+  'duplicate-concepts': duplicateConcepts,
+  'orphan-concepts': orphanConcepts,
+  'orphan-summaries': orphanSummaries,
+  'thin-concepts': thinConcepts,
+};
+
+const subcommand = process.argv[2];
+
+if (!subcommand || subcommand === '--help') {
+  console.error('Usage: node scripts/wiki/wiki-lint.mjs <subcommand>');
+  console.error('Subcommands: ' + [...Object.keys(COMMANDS), 'all'].join(', '));
+  process.exit(1);
+}
+
+if (subcommand === 'all') {
+  const result = {};
+  for (const [name, fn] of Object.entries(COMMANDS)) result[name] = fn();
+  console.log(JSON.stringify(result, null, 2));
+} else if (COMMANDS[subcommand]) {
+  console.log(JSON.stringify(COMMANDS[subcommand](), null, 2));
+} else {
+  console.error(`Unknown subcommand: ${subcommand}`);
+  console.error('Subcommands: ' + [...Object.keys(COMMANDS), 'all'].join(', '));
+  process.exit(1);
+}

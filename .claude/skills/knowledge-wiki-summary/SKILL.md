@@ -20,7 +20,7 @@ Use `KNOWLEDGE_PATH` for all subsequent steps.
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-summary.mjs list-stale
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs list-stale
 ```
 
 Output format:
@@ -44,7 +44,7 @@ For each entry in `sources`, run the following sub-steps in order.
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-summary.mjs create "{source_path}"
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs create "{source_path}"
 ```
 
 The script reads the source file, computes the hash, writes `source`, `hash`, `summarized_at`, `type`, `_icon`, and the `## Backlinks` entry automatically, then prints the summary file path. Store this path as `{summary_path}`.
@@ -106,7 +106,7 @@ Generate a one-line English description of the source document. If a subagent wa
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs upsert-summary "{rel-path}" "{one-line description}"
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-summary "{rel-path}" "{one-line description}"
 ```
 
 ---

@@ -20,7 +20,7 @@ Use `KNOWLEDGE_PATH` for all subsequent steps.
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-synthesis
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-synthesis
 ```
 
 This outputs a JSON array of summary file paths (relative to `KNOWLEDGE_PATH`) whose `summarized_at` is newer than the last time this skill ran. On the first run (no prior state), it returns all summary files.
@@ -32,7 +32,7 @@ Store this list as `RECENT_SUMMARIES`. These paths are used as a priority signal
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs read-concepts
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs read-concepts
 ```
 
 Keep the output in memory for step 4. Each line is one concept entry in the form:
@@ -100,7 +100,7 @@ Assess whether the evidence from the files actually supports the hypothesis:
 
 1. Run:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-concept.mjs create "{proposed_slug}" "{proposed_title}" --type Synthesis --icon notepad
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs create "{proposed_slug}" "{proposed_title}" --type Synthesis --icon notepad
    ```
    This creates `Wiki/Concepts/{proposed_slug}.md`. The command prints the file path.
 
@@ -115,12 +115,12 @@ Assess whether the evidence from the files actually supports the hypothesis:
 
 3. For each concept this synthesis draws from, add it to the Connected Concepts section (idempotent):
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-concept.mjs insert-connected-concept "{proposed_slug}" "{linked-slug}" "{Display Name}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{proposed_slug}" "{linked-slug}" "{Display Name}"
    ```
 
 4. For each source consulted, add its link (idempotent):
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-concept.mjs insert-source "{proposed_slug}" "{summary-path-without-md}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-source "{proposed_slug}" "{summary-path-without-md}"
    ```
    where `{summary-path-without-md}` is the summary file path with `.md` stripped, e.g. `Wiki/Summaries/Posts/foo.summary`.
 
@@ -131,7 +131,7 @@ Assess whether the evidence from the files actually supports the hypothesis:
 For each `{linked-slug}` / `{Display Name}` pair added via `insert-connected-concept` in step 5c.3, back-link that concept's own file to the synthesis:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-concept.mjs insert-connected-concept "{linked-slug}" "{proposed_slug}" "{proposed_title}"
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{linked-slug}" "{proposed_slug}" "{proposed_title}"
 ```
 
 This appends `- [[Wiki/Concepts/{proposed_slug}|{proposed_title}]]` to the `## Connected Concepts` section of each connected concept file, creating the section before `## Sources` if it does not exist. The operation is idempotent.
@@ -143,7 +143,7 @@ This appends `- [[Wiki/Concepts/{proposed_slug}|{proposed_title}]]` to the `## C
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs upsert-concept "{proposed_slug}" "{proposed_title}" "{one-line English description}"
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-concept "{proposed_slug}" "{proposed_title}" "{one-line English description}"
 ```
 
 ---
@@ -153,7 +153,7 @@ node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs upsert-concept "{proposed_slug}" "{
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-state.mjs set-last-run knowledge-wiki-synthesis
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs set-last-run knowledge-wiki-synthesis
 ```
 
 ### 7. Print summary

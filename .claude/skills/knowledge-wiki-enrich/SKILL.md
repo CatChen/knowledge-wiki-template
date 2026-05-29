@@ -20,7 +20,7 @@ Use `KNOWLEDGE_PATH` for all subsequent steps.
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/find-thin-concepts.mjs
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs thin-concepts
 ```
 
 Output is `{ "concepts": [...] }` — an array of concept file paths sorted by word count ascending, so the thinnest concepts come first. A concept is thin if it has fewer than 150 words in its body AND at most 2 entries in its `## Sources` section.
@@ -38,7 +38,7 @@ For each path in the `concepts` array:
 5. Write the updated file back to disk.
 6. Derive a fresh one-line English description from the enriched article. Run:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs upsert-concept "{slug}" "{display name from step 1}" "{fresh one-line description}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-concept "{slug}" "{display name from step 1}" "{fresh one-line description}"
    ```
 
 Write in American English: use **-ize** not -ise (normalize, organize, recognise→recognize), **-or** not -our (color, behavior, honour→honor), **-er** not -re (center, theater). Do not modify frontmatter or the `## Sources` / `## Connected Concepts` sections.

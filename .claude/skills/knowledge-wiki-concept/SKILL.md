@@ -20,7 +20,7 @@ Use `KNOWLEDGE_PATH` for all subsequent steps.
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-concept
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-concept
 ```
 
 This outputs a JSON array of summary file paths (relative to `KNOWLEDGE_PATH`) that are new or updated since the last run. Example:
@@ -64,7 +64,7 @@ Derive the summary's link-path by stripping the `.md` extension from the summary
 
 1. Run:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-concept.mjs create "{concept-slug}" "{Display Name}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs create "{concept-slug}" "{Display Name}"
    ```
    This creates `Wiki/Concepts/{concept-slug}.md` with frontmatter and an empty `## Sources` section. The command prints the file path.
 
@@ -76,7 +76,7 @@ Derive the summary's link-path by stripping the `.md` extension from the summary
 
 3. Add the source link:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-concept.mjs insert-source "{concept-slug}" "{summary-link-path}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-source "{concept-slug}" "{summary-link-path}"
    ```
 
 ---
@@ -88,7 +88,7 @@ Derive the summary's link-path by stripping the `.md` extension from the summary
 3. If the summary introduces information not already covered in the article body, integrate it naturally — extend an existing paragraph or add a new one. Do not duplicate content already there.
 4. Add the source link (idempotent — no-op if already present):
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-concept.mjs insert-source "{concept-slug}" "{summary-link-path}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-source "{concept-slug}" "{summary-link-path}"
    ```
 
 ---
@@ -98,7 +98,7 @@ Derive the summary's link-path by stripping the `.md` extension from the summary
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs upsert-concept "{concept-slug}" "{Display Name}" "{one-line English description}"
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-concept "{concept-slug}" "{Display Name}" "{one-line English description}"
 ```
 
 ---
@@ -108,7 +108,7 @@ node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs upsert-concept "{concept-slug}" "{D
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-state.mjs set-last-run knowledge-wiki-concept
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs set-last-run knowledge-wiki-concept
 ```
 
 ### 5. Print summary

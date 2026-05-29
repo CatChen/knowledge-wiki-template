@@ -20,7 +20,7 @@ Use `KNOWLEDGE_PATH` for all subsequent steps.
 **Structural candidates** are pairs detected by shared source material — concept files that share two or more `## Sources` entries. Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/find-duplicate-concept-candidates.mjs
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs duplicate-concepts
 ```
 
 This script automatically filters out previously dismissed pairs from `Wiki/.state.json`. Output is `{ "candidates": [...] }` sorted by shared source count descending. Tag each as `detection: "structural"`.
@@ -28,7 +28,7 @@ This script automatically filters out previously dismissed pairs from `Wiki/.sta
 **LLM pre-filter (structural only):** Before proceeding, review the structural candidates and eliminate any pair that is clearly about different topics despite sharing sources — pairs where the shared sources happen to cover two unrelated ideas (e.g. `applescript` and `email-marketing` appearing in the same AppleScript email tutorial). For each eliminated pair, call:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-state.mjs dismiss-merge-pair {pathA} {pathB}
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs dismiss-merge-pair {pathA} {pathB}
 ```
 
 where `pathA` and `pathB` are the full relative paths (e.g. `Wiki/Concepts/applescript.md`). Be conservative: only dismiss pairs you are confident are unrelated. A wrongly auto-dismissed pair is hidden from all future runs and requires manually editing `Wiki/.state.json` to recover.
@@ -36,7 +36,7 @@ where `pathA` and `pathB` are the full relative paths (e.g. `Wiki/Concepts/apple
 **Semantic candidates** are pairs identified by conceptual overlap — synonyms, one being a strict subset of the other, or articles that would naturally be merged — without necessarily sharing sources. Perform this pass by running:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs read-concepts
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs read-concepts
 ```
 
 This outputs all concept entries with their one-line descriptions. Use your judgment to identify semantically overlapping pairs from this list. Tag each as `detection: "semantic"`. Pairs found by both methods are tagged `detection: "both"`. Skip the LLM pre-filter for semantic candidates — they were already identified by LLM judgment.
@@ -114,20 +114,20 @@ Then execute:
 
 3. **Merge Sources**: For each `## Sources` entry in the secondary, extract the summary path (the content between `[[` and `]]`) and run:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-concept.mjs insert-source "{primary-slug}" "{summary-path}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-source "{primary-slug}" "{summary-path}"
    ```
    The command is idempotent — entries already in the primary are skipped automatically.
 
 4. **Merge Connected Concepts**: For each `## Connected Concepts` entry in the secondary, extract the linked slug and display name (from `[[Wiki/Concepts/{slug}|{Display Name}]]`), skip any self-reference to the secondary's own slug, then run:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-concept.mjs insert-connected-concept "{primary-slug}" "{linked-slug}" "{Display Name}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{primary-slug}" "{linked-slug}" "{Display Name}"
    ```
    The command is idempotent — entries already in the primary are skipped automatically.
 
 5. **Update backlinks**: Run:
 
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/update-concept-backlinks.mjs {secondary-path} {primary-path} "{primary display name}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/update-concept-backlinks.mjs {secondary-path} {primary-path} "{primary display name}"
    ```
 
    This finds every wiki file that links to the secondary concept and handles each one correctly: if the file already has a link to the primary, it removes the secondary link line to avoid creating a duplicate; otherwise it replaces the secondary wikilink with the primary.
@@ -141,13 +141,13 @@ Then execute:
 7. **Update the index**: Run:
 
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs delete-concept "{secondary-slug}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs delete-concept "{secondary-slug}"
    ```
 
    If the primary's one-line description has changed meaningfully, also run:
 
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki-index.mjs upsert-concept "{primary-slug}" "{primary display name}" "{updated one-line description}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-concept "{primary-slug}" "{primary display name}" "{updated one-line description}"
    ```
 
 #### 3d. If Dismiss
@@ -155,7 +155,7 @@ Then execute:
 Call:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki-state.mjs dismiss-merge-pair {pathA} {pathB}
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs dismiss-merge-pair {pathA} {pathB}
 ```
 
 Continue to the next candidate.
