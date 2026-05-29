@@ -5,10 +5,10 @@
  * Skills should call this instead of reading/writing .state.json directly.
  *
  * Usage:
- *   node scripts/wiki-state.mjs find-unprocessed-summaries <skill-name>
- *   node scripts/wiki-state.mjs set-last-run <skill-name>
- *   node scripts/wiki-state.mjs dismiss-merge-pair <pathA> <pathB>
- *   node scripts/wiki-state.mjs prune-merge-pairs
+ *   node scripts/wiki/wiki-state.mjs find-unprocessed-summaries <skill-name>
+ *   node scripts/wiki/wiki-state.mjs set-last-run <skill-name>
+ *   node scripts/wiki/wiki-state.mjs dismiss-merge-pair <pathA> <pathB>
+ *   node scripts/wiki/wiki-state.mjs prune-merge-pairs
  *
  * <skill-name> — the skill identifier, e.g. "knowledge-wiki-concept"
  * <pathA/pathB> — relative concept file paths, e.g. "Wiki/Concepts/foo.md"

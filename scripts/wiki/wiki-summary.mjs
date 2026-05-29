@@ -5,8 +5,8 @@
  * frontmatter or backlinks by hand.
  *
  * Usage:
- *   node scripts/wiki-summary.mjs list-stale
- *   node scripts/wiki-summary.mjs create <source-path> [--at <ISO timestamp>]
+ *   node scripts/wiki/wiki-summary.mjs list-stale
+ *   node scripts/wiki/wiki-summary.mjs create <source-path> [--at <ISO timestamp>]
  *
  * Subcommands:
  *   list-stale

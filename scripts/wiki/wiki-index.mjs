@@ -5,16 +5,16 @@
  * Skills should call this instead of reading the whole file and writing it back.
  *
  * Usage:
- *   node scripts/wiki-index.mjs sort
- *   node scripts/wiki-index.mjs read-concepts
- *   node scripts/wiki-index.mjs read-summaries
- *   node scripts/wiki-index.mjs upsert-concept <slug> "<display-name>" "<description>"
- *   node scripts/wiki-index.mjs delete-concept <slug>
- *   node scripts/wiki-index.mjs upsert-summary "<rel-path>" "<description>"
- *   node scripts/wiki-index.mjs delete-summary "<rel-path>"
- *   node scripts/wiki-index.mjs find-missing-summaries
- *   node scripts/wiki-index.mjs find-missing-concepts
- *   node scripts/wiki-index.mjs remove-dead-links
+ *   node scripts/wiki/wiki-index.mjs sort
+ *   node scripts/wiki/wiki-index.mjs read-concepts
+ *   node scripts/wiki/wiki-index.mjs read-summaries
+ *   node scripts/wiki/wiki-index.mjs upsert-concept <slug> "<display-name>" "<description>"
+ *   node scripts/wiki/wiki-index.mjs delete-concept <slug>
+ *   node scripts/wiki/wiki-index.mjs upsert-summary "<rel-path>" "<description>"
+ *   node scripts/wiki/wiki-index.mjs delete-summary "<rel-path>"
+ *   node scripts/wiki/wiki-index.mjs find-missing-summaries
+ *   node scripts/wiki/wiki-index.mjs find-missing-concepts
+ *   node scripts/wiki/wiki-index.mjs remove-dead-links
  *
  * <slug>     — the concept file basename without .md, e.g. "feature-gating"
  * <rel-path> — path relative to Wiki/Summaries/, e.g. "Twitter/Tweets-foo.summary"

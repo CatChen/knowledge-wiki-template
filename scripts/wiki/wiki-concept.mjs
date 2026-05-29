@@ -5,32 +5,32 @@
  * wikilinks containing file paths by hand.
  *
  * Usage:
- *   node scripts/wiki-concept.mjs create <slug> <display-name> [--type <Concept|Synthesis>] [--icon <note|notepad>]
- *   node scripts/wiki-concept.mjs insert-source <slug> <summary-path>
- *   node scripts/wiki-concept.mjs delete-source <slug> <summary-path>
- *   node scripts/wiki-concept.mjs insert-connected-concept <slug> <linked-slug> <display-name>
- *   node scripts/wiki-concept.mjs delete-connected-concept <slug> <linked-slug>
+ *   node scripts/wiki/wiki-concept.mjs create <slug> <display-name> [--type <Concept|Synthesis>] [--icon <note|notepad>]
+ *   node scripts/wiki/wiki-concept.mjs insert-source <slug> <summary-path>
+ *   node scripts/wiki/wiki-concept.mjs delete-source <slug> <summary-path>
+ *   node scripts/wiki/wiki-concept.mjs insert-connected-concept <slug> <linked-slug> <display-name>
+ *   node scripts/wiki/wiki-concept.mjs delete-connected-concept <slug> <linked-slug>
  *
  * Subcommands:
- *   node scripts/wiki-concept.mjs create <slug> <display-name> [--type <Concept|Synthesis>] [--icon <note|notepad>]
+ *   node scripts/wiki/wiki-concept.mjs create <slug> <display-name> [--type <Concept|Synthesis>] [--icon <note|notepad>]
  *       Create a skeleton concept file at Wiki/Concepts/<slug>.md.
  *       Prints the concept file rel-path so the skill knows where to edit.
  *       Defaults: --type Concept --icon note
  *
- *   node scripts/wiki-concept.mjs insert-source <slug> <summary-path>
+ *   node scripts/wiki/wiki-concept.mjs insert-source <slug> <summary-path>
  *       Append "- [[<summary-path>]]" to the ## Sources section of the concept file.
  *       Idempotent — no-op if the link already exists.
  *       <summary-path>: path without .md, e.g. Wiki/Summaries/Posts/foo.summary
  *
- *   node scripts/wiki-concept.mjs delete-source <slug> <summary-path>
+ *   node scripts/wiki/wiki-concept.mjs delete-source <slug> <summary-path>
  *       Remove the bullet line containing [[<summary-path>]] from the concept file.
  *
- *   node scripts/wiki-concept.mjs insert-connected-concept <slug> <linked-slug> <display-name>
+ *   node scripts/wiki/wiki-concept.mjs insert-connected-concept <slug> <linked-slug> <display-name>
  *       Append "- [[Wiki/Concepts/<linked-slug>|<display-name>]]" to the
  *       ## Connected Concepts section. Creates the section immediately before
  *       ## Sources if it does not exist. Idempotent.
  *
- *   node scripts/wiki-concept.mjs delete-connected-concept <slug> <linked-slug>
+ *   node scripts/wiki/wiki-concept.mjs delete-connected-concept <slug> <linked-slug>
  *       Remove the bullet line containing [[Wiki/Concepts/<linked-slug>|...]] from
  *       the ## Connected Concepts section of the concept file.
  */
@@ -77,7 +77,7 @@ function cmdCreate(args) {
   const slug = args[0];
   const displayName = args[1];
   if (!slug || !displayName) {
-    console.error('Usage: node scripts/wiki-concept.mjs create <slug> <display-name> [--type <Concept|Synthesis>] [--icon <note|notepad>]');
+    console.error('Usage: node scripts/wiki/wiki-concept.mjs create <slug> <display-name> [--type <Concept|Synthesis>] [--icon <note|notepad>]');
     process.exit(1);
   }
 
@@ -114,7 +114,7 @@ function cmdCreate(args) {
 function cmdInsertSource(args) {
   const [slug, summaryPath] = args;
   if (!slug || !summaryPath) {
-    console.error('Usage: node scripts/wiki-concept.mjs insert-source <slug> <summary-path>');
+    console.error('Usage: node scripts/wiki/wiki-concept.mjs insert-source <slug> <summary-path>');
     process.exit(1);
   }
 
@@ -136,7 +136,7 @@ function cmdInsertSource(args) {
 function cmdDeleteSource(args) {
   const [slug, summaryPath] = args;
   if (!slug || !summaryPath) {
-    console.error('Usage: node scripts/wiki-concept.mjs delete-source <slug> <summary-path>');
+    console.error('Usage: node scripts/wiki/wiki-concept.mjs delete-source <slug> <summary-path>');
     process.exit(1);
   }
 
@@ -158,7 +158,7 @@ function cmdDeleteSource(args) {
 function cmdInsertConnectedConcept(args) {
   const [slug, linkedSlug, displayName] = args;
   if (!slug || !linkedSlug || !displayName) {
-    console.error('Usage: node scripts/wiki-concept.mjs insert-connected-concept <slug> <linked-slug> <display-name>');
+    console.error('Usage: node scripts/wiki/wiki-concept.mjs insert-connected-concept <slug> <linked-slug> <display-name>');
     process.exit(1);
   }
 
@@ -185,7 +185,7 @@ function cmdInsertConnectedConcept(args) {
 function cmdDeleteConnectedConcept(args) {
   const [slug, linkedSlug] = args;
   if (!slug || !linkedSlug) {
-    console.error('Usage: node scripts/wiki-concept.mjs delete-connected-concept <slug> <linked-slug>');
+    console.error('Usage: node scripts/wiki/wiki-concept.mjs delete-connected-concept <slug> <linked-slug>');
     process.exit(1);
   }
 
