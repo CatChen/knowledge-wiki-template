@@ -11,7 +11,7 @@ Health-check and repair the wiki. Runs four checks in sequence — each builds o
 
 ### 1. Establish the working directory
 
-The knowledge base root is the nearest ancestor directory that contains both a `Wiki/` subdirectory and a `Posts/` subdirectory. You can confirm it with `git rev-parse --show-toplevel`. Store the result as `KNOWLEDGE_PATH`.
+The knowledge base root is the Git repository root. Run `git rev-parse --show-toplevel` and store the result as `KNOWLEDGE_PATH`.
 
 Use `KNOWLEDGE_PATH` for all subsequent steps.
 
