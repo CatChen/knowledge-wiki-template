@@ -31,7 +31,7 @@
  * If Wiki/index.md does not exist, it is created automatically on the first write.
  */
 
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getBulletsFromSection } from './wiki-section-lib.mjs';
@@ -101,6 +101,7 @@ function writeIndex(concepts, summaries) {
     '',
   ].join('\n');
 
+  mkdirSync(path.dirname(INDEX_PATH), { recursive: true });
   writeFileSync(INDEX_PATH, content, 'utf8');
 }
 
