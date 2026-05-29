@@ -97,7 +97,7 @@ Ask the user what to do using **exactly four options** as follows.
 | 3 | `Dismiss` | They are distinct; never show this pair again |
 | 4 | `Skip` | Leave for now; show again next run |
 
-**If `AskUserQuestion` is available**, invoke it with these four options — the option fields map to the `label` and `description` parameters.
+**If `AskUserQuestion` is available**, invoke it with these four options — the option fields map to the `label` and `description` parameters. Users may type "stop" in the Other field to halt all remaining pairs.
 
 **If `AskUserQuestion` is unavailable** (e.g. Codex), print the options as a numbered list and ask the user to reply with 1, 2, 3, or 4 (or "stop" to halt all remaining pairs). Wait for a reply before proceeding.
 
