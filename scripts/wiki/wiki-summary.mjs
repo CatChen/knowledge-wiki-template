@@ -5,8 +5,8 @@
  * frontmatter or backlinks by hand.
  *
  * Usage:
- *   node scripts/wiki-summary.mjs list-stale
- *   node scripts/wiki-summary.mjs create <source-path> [--at <ISO timestamp>]
+ *   node scripts/wiki/wiki-summary.mjs list-stale
+ *   node scripts/wiki/wiki-summary.mjs create <source-path> [--at <ISO timestamp>]
  *
  * Subcommands:
  *   list-stale
@@ -112,7 +112,7 @@ function cmdListStale() {
 function cmdCreate(args) {
   const sourceRel = args[0];
   if (!sourceRel) {
-    console.error('Usage: wiki-summary.mjs create <source-path> [--at <ISO timestamp>]');
+    console.error('Usage: node scripts/wiki/wiki-summary.mjs create <source-path> [--at <ISO timestamp>]');
     process.exit(1);
   }
 

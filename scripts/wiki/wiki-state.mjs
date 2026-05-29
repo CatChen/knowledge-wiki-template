@@ -5,10 +5,10 @@
  * Skills should call this instead of reading/writing .state.json directly.
  *
  * Usage:
- *   node scripts/wiki-state.mjs find-unprocessed-summaries <skill-name>
- *   node scripts/wiki-state.mjs set-last-run <skill-name>
- *   node scripts/wiki-state.mjs dismiss-merge-pair <pathA> <pathB>
- *   node scripts/wiki-state.mjs prune-merge-pairs
+ *   node scripts/wiki/wiki-state.mjs find-unprocessed-summaries <skill-name>
+ *   node scripts/wiki/wiki-state.mjs set-last-run <skill-name>
+ *   node scripts/wiki/wiki-state.mjs dismiss-merge-pair <pathA> <pathB>
+ *   node scripts/wiki/wiki-state.mjs prune-merge-pairs
  *
  * <skill-name> — the skill identifier, e.g. "knowledge-wiki-concept"
  * <pathA/pathB> — relative concept file paths, e.g. "Wiki/Concepts/foo.md"
@@ -37,7 +37,7 @@ const STATE_FILE = path.join(KNOWLEDGE_DIR, 'Wiki', '.state.json');
 const [subcommand, ...args] = process.argv.slice(2);
 
 if (!subcommand) {
-  console.error('Usage: node wiki-state.mjs <find-unprocessed-summaries|set-last-run|dismiss-merge-pair|prune-merge-pairs> [args]');
+  console.error('Usage: node scripts/wiki/wiki-state.mjs <find-unprocessed-summaries|set-last-run|dismiss-merge-pair|prune-merge-pairs> [args]');
   process.exit(1);
 }
 
@@ -53,7 +53,7 @@ function saveState() {
 if (subcommand === 'find-unprocessed-summaries') {
   const [skillName] = args;
   if (!skillName) {
-    console.error('Usage: node wiki-state.mjs find-unprocessed-summaries <skill-name>');
+    console.error('Usage: node scripts/wiki/wiki-state.mjs find-unprocessed-summaries <skill-name>');
     process.exit(1);
   }
 
@@ -103,7 +103,7 @@ if (subcommand === 'find-unprocessed-summaries') {
 } else if (subcommand === 'set-last-run') {
   const [skillName] = args;
   if (!skillName) {
-    console.error('Usage: node wiki-state.mjs set-last-run <skill-name>');
+    console.error('Usage: node scripts/wiki/wiki-state.mjs set-last-run <skill-name>');
     process.exit(1);
   }
   if (!state[skillName]) state[skillName] = {};
@@ -114,7 +114,7 @@ if (subcommand === 'find-unprocessed-summaries') {
 } else if (subcommand === 'dismiss-merge-pair') {
   const [pathA, pathB] = args;
   if (!pathA || !pathB) {
-    console.error('Usage: node wiki-state.mjs dismiss-merge-pair <pathA> <pathB>');
+    console.error('Usage: node scripts/wiki/wiki-state.mjs dismiss-merge-pair <pathA> <pathB>');
     process.exit(1);
   }
   const normalizedPair = [pathA, pathB].sort();
