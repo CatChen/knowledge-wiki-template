@@ -13,6 +13,9 @@
  *   orphan-concepts         Concept files with no inbound wikilinks
  *   orphan-summaries        Summary files whose source document no longer exists
  *   thin-concepts           Concept files below word/source thresholds (expansion candidates)
+ *   missing-parent-clusters Groups of 2+ concepts sharing a non-existing implied parent slug; each
+ *                           concept is grouped under its non-existing prefix ancestors up to (but not
+ *                           including) its nearest existing ancestor
  *   all                     Run all checks; output keyed by subcommand name
  */
 
@@ -158,6 +161,52 @@ function thinConcepts() {
   return { concepts: concepts.map(c => c._path) };
 }
 
+function missingParentClusters() {
+  const state = fs.existsSync(STATE_FILE)
+    ? JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
+    : {};
+  const dismissedSet = new Set(
+    state['knowledge-wiki-cluster']?.dismissedParents ?? []
+  );
+
+  if (!fs.existsSync(CONCEPTS_DIR)) return { clusters: [] };
+
+  const slugs = fs.readdirSync(CONCEPTS_DIR)
+    .filter(f => f.endsWith('.md'))
+    .map(f => f.slice(0, -3))
+    .sort();
+  const slugSet = new Set(slugs);
+
+  // Collect each slug under every non-existing prefix ancestor, stopping at
+  // the first existing ancestor (deepest to shallowest). A slug may appear
+  // in multiple groups at different depths.
+  const groups = Object.create(null); // null prototype avoids __proto__/constructor collisions
+  for (const slug of slugs) {
+    const parts = slug.split('-');
+    if (parts.length < 2) continue;
+    for (let len = parts.length - 1; len >= 1; len--) {
+      const prefix = parts.slice(0, len).join('-');
+      if (slugSet.has(prefix)) break; // stop at deepest existing ancestor
+      if (!groups[prefix]) groups[prefix] = [];
+      groups[prefix].push(`Wiki/Concepts/${slug}.md`);
+    }
+  }
+
+  // Keep only groups with 2+ children that haven't been dismissed.
+  const clusters = Object.entries(groups)
+    .filter(([prefix, children]) => children.length >= 2 && !dismissedSet.has(prefix))
+    .map(([impliedParent, children]) => ({ impliedParent, children: children.sort() }))
+    // Deepest clusters first (most hyphens in impliedParent) so the skill builds
+    // bottom-up: creating a deeper concept makes it a child in the next shallower
+    // cluster after a refresh. Break ties by cluster size descending.
+    .sort((a, b) => {
+      const depthDiff = b.impliedParent.split('-').length - a.impliedParent.split('-').length;
+      return depthDiff !== 0 ? depthDiff : b.children.length - a.children.length;
+    });
+
+  return { clusters };
+}
+
 // ── dispatch ──────────────────────────────────────────────────────────────────
 
 const COMMANDS = {
@@ -167,6 +216,7 @@ const COMMANDS = {
   'orphan-concepts': orphanConcepts,
   'orphan-summaries': orphanSummaries,
   'thin-concepts': thinConcepts,
+  'missing-parent-clusters': missingParentClusters,
 };
 
 const subcommand = process.argv[2];

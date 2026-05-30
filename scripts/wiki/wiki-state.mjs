@@ -9,6 +9,8 @@
  *   node scripts/wiki/wiki-state.mjs set-last-run <skill-name>
  *   node scripts/wiki/wiki-state.mjs dismiss-merge-pair <pathA> <pathB>
  *   node scripts/wiki/wiki-state.mjs prune-merge-pairs
+ *   node scripts/wiki/wiki-state.mjs dismiss-cluster-parent <implied-parent>
+ *   node scripts/wiki/wiki-state.mjs prune-cluster-parents
  *
  * <skill-name> — the skill identifier, e.g. "knowledge-wiki-concept"
  * <pathA/pathB> — relative concept file paths, e.g. "Wiki/Concepts/foo.md"
@@ -24,6 +26,10 @@
  *   produces the same result.
  * prune-merge-pairs removes dismissed pairs where at least one concept file no
  *   longer exists. Prints the count of removed pairs.
+ * dismiss-cluster-parent adds an implied-parent slug to the dismissed list so it is
+ *   never shown again by knowledge-wiki-cluster.
+ * prune-cluster-parents removes dismissed parent slugs whose concept file now
+ *   exists on disk (cluster was resolved). Prints the count of removed entries.
  */
 
 import fs from 'fs';
@@ -37,7 +43,7 @@ const STATE_FILE = path.join(KNOWLEDGE_DIR, 'Wiki', '.state.json');
 const [subcommand, ...args] = process.argv.slice(2);
 
 if (!subcommand) {
-  console.error('Usage: node scripts/wiki/wiki-state.mjs <find-unprocessed-summaries|set-last-run|dismiss-merge-pair|prune-merge-pairs> [args]');
+  console.error('Usage: node scripts/wiki/wiki-state.mjs <find-unprocessed-summaries|set-last-run|dismiss-merge-pair|prune-merge-pairs|dismiss-cluster-parent|prune-cluster-parents> [args]');
   process.exit(1);
 }
 
@@ -150,6 +156,44 @@ if (subcommand === 'find-unprocessed-summaries') {
 
   if (removedCount > 0) {
     state['knowledge-wiki-merge'].dismissedPairs = kept;
+    saveState();
+  }
+  console.log(removedCount);
+
+} else if (subcommand === 'dismiss-cluster-parent') {
+  const [impliedParent] = args.map(a => a.trim());
+  if (!impliedParent) {
+    console.error('Usage: node scripts/wiki/wiki-state.mjs dismiss-cluster-parent <implied-parent>');
+    process.exit(1);
+  }
+
+  if (!state['knowledge-wiki-cluster']) state['knowledge-wiki-cluster'] = {};
+  if (!state['knowledge-wiki-cluster'].dismissedParents) state['knowledge-wiki-cluster'].dismissedParents = [];
+
+  const dismissed = state['knowledge-wiki-cluster'].dismissedParents;
+  if (!dismissed.includes(impliedParent)) {
+    dismissed.push(impliedParent);
+    saveState();
+    console.log(`Dismissed cluster: ${impliedParent}`);
+  } else {
+    console.log(`Already dismissed: ${impliedParent}`);
+  }
+
+} else if (subcommand === 'prune-cluster-parents') {
+  const parents = state?.['knowledge-wiki-cluster']?.dismissedParents ?? [];
+  const kept = [];
+  let removedCount = 0;
+
+  for (const slug of parents) {
+    if (fs.existsSync(path.join(KNOWLEDGE_DIR, 'Wiki', 'Concepts', `${slug}.md`))) {
+      removedCount++;
+    } else {
+      kept.push(slug);
+    }
+  }
+
+  if (removedCount > 0) {
+    state['knowledge-wiki-cluster'].dismissedParents = kept;
     saveState();
   }
   console.log(removedCount);
