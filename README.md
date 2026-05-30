@@ -109,8 +109,8 @@ Run the skills in order after adding or editing source files:
 | `/knowledge-wiki-concept`   | After running summary — creates or updates concept articles in `Wiki/Concepts/`                                            |
 | `/knowledge-wiki-synthesis` | Periodically after accumulating new concepts — discovers cross-cutting connections and writes synthesis articles           |
 | `/knowledge-wiki-lint`      | Periodically, especially after reorganizing source files — repairs orphan summaries, broken wikilinks, and orphan concepts |
-| `/knowledge-wiki-merge`     | Periodically — interactive session to identify and merge duplicate concept articles                                        |
 | `/knowledge-wiki-cluster`   | Periodically — interactive session to create topic overview concepts for clusters of related sub-concepts without a parent |
+| `/knowledge-wiki-merge`     | Periodically — interactive session to identify and merge duplicate concept articles                                        |
 | `/knowledge-wiki-enrich`    | Periodically — expands thin concept articles (< 4 prose lines, ≤ 2 sources) using web search                              |
 
 The periodic skills (`/knowledge-wiki-synthesis`, `/knowledge-wiki-lint`, `/knowledge-wiki-enrich`) can also be configured to run on a schedule using the Claude desktop app's built-in scheduling feature, so the wiki stays fresh automatically.

@@ -109,8 +109,8 @@ Run the skill at .claude/skills/knowledge-wiki-summary
 | `/knowledge-wiki-concept`   | 运行 summary 之后 —— 在 `Wiki/Concepts/` 中创建或更新概念文章          |
 | `/knowledge-wiki-synthesis` | 积累新概念后定期运行 —— 发现跨领域联系并撰写综合文章                   |
 | `/knowledge-wiki-lint`      | 定期运行，尤其是重新组织源文件后 —— 修复孤立摘要、断链和孤立概念       |
-| `/knowledge-wiki-merge`     | 定期运行 —— 交互式会话，识别并合并重复的概念文章                                       |
 | `/knowledge-wiki-cluster`   | 定期运行 —— 交互式会话，为缺少父概念的相关子概念集群创建主题概览概念文章               |
+| `/knowledge-wiki-merge`     | 定期运行 —— 交互式会话，识别并合并重复的概念文章                                       |
 | `/knowledge-wiki-enrich`    | 定期运行 —— 使用网络搜索扩展内容较少的概念文章（< 4 行正文，≤ 2 个来源）               |
 
 定期技能（`/knowledge-wiki-synthesis`、`/knowledge-wiki-lint`、`/knowledge-wiki-enrich`）也可以使用 Claude 桌面应用的内置定时功能配置为按计划运行，让维基自动保持最新。

@@ -31,6 +31,6 @@ The `Wiki/` directory implements the [LLM Wiki](https://gist.github.com/karpathy
 | `/knowledge-wiki-concept`   | After running summary — creates or updates concept articles in `Wiki/Concepts/`                                            |
 | `/knowledge-wiki-synthesis` | Periodically after accumulating new concepts — discovers cross-cutting connections and writes synthesis articles           |
 | `/knowledge-wiki-lint`      | Periodically, especially after reorganizing source files — repairs orphan summaries, broken wikilinks, and orphan concepts |
-| `/knowledge-wiki-merge`     | Periodically — interactive session to identify and merge duplicate concept articles                                        |
 | `/knowledge-wiki-cluster`   | Periodically — interactive session to create topic overview concepts for clusters of related sub-concepts without a parent |
+| `/knowledge-wiki-merge`     | Periodically — interactive session to identify and merge duplicate concept articles                                        |
 | `/knowledge-wiki-enrich`    | Periodically — expands thin concept articles using web search                                                              |
