@@ -11,7 +11,7 @@ Create or update concept articles in `Wiki/Concepts/` by extracting concepts fro
 
 ### 1. Establish the working directory
 
-The knowledge base root is the directory containing this skill's `.claude/` folder. Determine it by resolving the path of the `.claude/` directory upward — the parent of `.claude/` is `KNOWLEDGE_PATH`.
+The knowledge base root is the Git repository root. Run `git rev-parse --show-toplevel` and store the result as `KNOWLEDGE_PATH`.
 
 Use `KNOWLEDGE_PATH` for all subsequent steps.
 

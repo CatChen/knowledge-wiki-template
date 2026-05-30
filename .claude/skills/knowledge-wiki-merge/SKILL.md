@@ -11,7 +11,7 @@ Detect duplicate concept pairs and interactively merge them. Presents one pair a
 
 ### 1. Establish the working directory
 
-The knowledge base root is the directory containing this skill's `.claude/` folder. Determine it by resolving the path of the `.claude/` directory upward — the parent of `.claude/` is `KNOWLEDGE_PATH`.
+The knowledge base root is the Git repository root. Run `git rev-parse --show-toplevel` and store the result as `KNOWLEDGE_PATH`.
 
 Use `KNOWLEDGE_PATH` for all subsequent steps.
 
@@ -45,7 +45,7 @@ If no candidates remain, print `No duplicate candidates found.` and stop.
 
 ### 3. Present and resolve each candidate
 
-Process one candidate at a time. Use a **separate AskUserQuestion call for each pair** — never combine multiple pairs into a single question, even if you intend to recommend the same action for several in a row.
+Process one candidate at a time. Use a **separate interaction for each pair** — never combine multiple pairs into a single question, even if you intend to recommend the same action for several in a row.
 
 For each remaining candidate pair, work through the following sub-steps in order.
 
@@ -73,31 +73,33 @@ Before asking, determine which concept should be the primary by applying these f
 2. **Prose depth**: if scope is similar, more paragraphs → likely primary
 3. **Source count**: if prose is similar, more sources → likely primary
 
-Use the AskUserQuestion tool with **exactly four options** structured as follows. The option fields map to the AskUserQuestion `label` and `description` parameters.
+Ask the user what to do using **exactly four options** as follows.
 
 **Always include both merge directions.** Never drop one because you think it is obviously wrong — the user makes that call.
 
 **Never add "(Recommended)" to Dismiss or Skip** — not in the label, not in the description, not anywhere. These options are always neutral.
 
-**If a clear primary can be determined**, put `(Recommended)` in the **label** of the recommended merge option and place it first:
+**If a clear primary can be determined**, put `(Recommended)` after the recommended merge option and place it first:
 
-| # | label | description |
-|---|---|---|
-| 1 | `Merge {Secondary} → {Primary} (Recommended)` | `{Secondary} is deleted; its content is merged into {Primary}` |
-| 2 | `Merge {Primary} → {Secondary}` | `{Primary} is deleted; reverse direction` |
-| 3 | `Dismiss` | `They are distinct; never show this pair again` |
-| 4 | `Skip` | `Leave for now; show again next run` |
+| # | Option | Description |
+|---|--------|-------------|
+| 1 | `Merge {Secondary} → {Primary} (Recommended)` | `{Secondary}` is deleted; its content is merged into `{Primary}` |
+| 2 | `Merge {Primary} → {Secondary}` | `{Primary}` is deleted; reverse direction |
+| 3 | `Dismiss` | They are distinct; never show this pair again |
+| 4 | `Skip` | Leave for now; show again next run |
 
-**If no clear primary can be determined** (both concepts are similarly scoped, similarly long, and have similar source counts), state this explicitly before asking. Do not add `(Recommended)` to any option:
+**If no clear primary can be determined** (both concepts are similarly scoped, similarly long, and have similar source counts), state this explicitly. Do not add `(Recommended)` to any option:
 
-| # | label | description |
-|---|---|---|
-| 1 | `Merge {Display Name A} → {Display Name B}` | `{A} is deleted; its content is merged into {B}` |
-| 2 | `Merge {Display Name B} → {Display Name A}` | `{B} is deleted; its content is merged into {A}` |
-| 3 | `Dismiss` | `They are distinct; never show this pair again` |
-| 4 | `Skip` | `Leave for now; show again next run` |
+| # | Option | Description |
+|---|--------|-------------|
+| 1 | `Merge {Display Name A} → {Display Name B}` | `{A}` is deleted; its content is merged into `{B}` |
+| 2 | `Merge {Display Name B} → {Display Name A}` | `{B}` is deleted; its content is merged into `{A}` |
+| 3 | `Dismiss` | They are distinct; never show this pair again |
+| 4 | `Skip` | Leave for now; show again next run |
 
-Note: users may type "stop" in the Other field to stop processing all remaining pairs.
+**If `AskUserQuestion` is available**, invoke it with these four options — the option fields map to the `label` and `description` parameters. Users may type "stop" in the Other field to halt all remaining pairs.
+
+**If `AskUserQuestion` is unavailable** (e.g. Codex), print the options as a numbered list and ask the user to reply with 1, 2, 3, or 4 (or "stop" to halt all remaining pairs). Wait for a reply before proceeding.
 
 #### 3c. If a Merge option was selected
 
@@ -110,21 +112,23 @@ Then execute:
 
 1. **Integrate prose**: Add any information from the secondary's body not already covered in the primary — extend existing paragraphs or add new ones. Write in the primary's established voice and style, using American English spelling (e.g. "organize" not "organise", "recognize" not "recognise"). Convert any British spellings from the secondary's text before integrating.
 
-2. **Write the primary file** back to disk with the integrated prose from step 1 only — Sources and Connected Concepts will be handled by the scripts below.
+2. **Merge tags**: Take the union of the `tags` arrays from both concepts' frontmatter. Preserve the primary's existing tag order, then append any tags from the secondary that are not already present. If either concept's frontmatter omits the `tags` field entirely, treat it as an empty array. Use this combined list as the primary's new `tags` value.
 
-3. **Merge Sources**: For each `## Sources` entry in the secondary, extract the summary path (the content between `[[` and `]]`) and run:
+3. **Write the primary file** back to disk with the integrated prose from step 1 and the merged tags from step 2 — Sources and Connected Concepts will be handled by the scripts below.
+
+4. **Merge Sources**: For each `## Sources` entry in the secondary, extract the summary path (the content between `[[` and `]]`) and run:
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-source "{primary-slug}" "{summary-path}"
    ```
    The command is idempotent — entries already in the primary are skipped automatically.
 
-4. **Merge Connected Concepts**: For each `## Connected Concepts` entry in the secondary, extract the linked slug and display name (from `[[Wiki/Concepts/{slug}|{Display Name}]]`), skip any self-reference to the secondary's own slug, then run:
+5. **Merge Connected Concepts**: For each `## Connected Concepts` entry in the secondary, extract the linked slug and display name (from `[[Wiki/Concepts/{slug}|{Display Name}]]`), skip any self-reference to the secondary's own slug, then run:
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{primary-slug}" "{linked-slug}" "{Display Name}"
    ```
    The command is idempotent — entries already in the primary are skipped automatically.
 
-5. **Update backlinks**: Run:
+6. **Update backlinks**: Run:
 
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/update-concept-backlinks.mjs {secondary-path} {primary-path} "{primary display name}"
@@ -132,13 +136,13 @@ Then execute:
 
    This finds every wiki file that links to the secondary concept and handles each one correctly: if the file already has a link to the primary, it removes the secondary link line to avoid creating a duplicate; otherwise it replaces the secondary wikilink with the primary.
 
-6. **Delete the secondary file**:
+7. **Delete the secondary file**:
 
    ```bash
    rm {KNOWLEDGE_PATH}/{secondary-path}
    ```
 
-7. **Update the index**: Run:
+8. **Update the index**: Run:
 
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs delete-concept "{secondary-slug}"

@@ -5,13 +5,13 @@ description: 'Audit and repair the knowledge wiki. Detects orphan summaries (sou
 
 # Knowledge Wiki Lint
 
-Health-check and repair the wiki. Runs four checks in sequence — each builds on a clean state left by the previous one. JavaScript handles all file-system detection; the LLM handles any repair that requires judgment.
+Health-check and repair the wiki. Runs nine checks in sequence — each builds on a clean state left by the previous one. JavaScript handles all file-system detection; the LLM handles any repair that requires judgment.
 
 ## Setup
 
 ### 1. Establish the working directory
 
-The knowledge base root is the directory containing this skill's `.claude/` folder. Determine it by resolving the path of the `.claude/` directory upward — the parent of `.claude/` is `KNOWLEDGE_PATH`.
+The knowledge base root is the Git repository root. Run `git rev-parse --show-toplevel` and store the result as `KNOWLEDGE_PATH`.
 
 Use `KNOWLEDGE_PATH` for all subsequent steps.
 
@@ -75,11 +75,11 @@ Read each file listed in the `referencedBy` array.
 
 #### 4b. Create the concept file
 
-Create `{KNOWLEDGE_PATH}/{key}` following exactly the format and instructions in `.claude/skills/knowledge-wiki-concept/SKILL.md` under step 3b ("If the concept file does NOT exist"). Draw on all referencing summary files to write the article.
+Create `{KNOWLEDGE_PATH}/{key}` following exactly the format and instructions in the `knowledge-wiki-concept` skill (step 3b — "If the concept file does NOT exist"). Draw on all referencing summary files to write the article.
 
 #### 4c. Update the index
 
-Derive the slug from the concept file path (basename without `.md`), and the display name from the `# Title` line of the file just created. Then follow step 3c of `.claude/skills/knowledge-wiki-concept/SKILL.md`.
+Derive the slug from the concept file path (basename without `.md`), and the display name from the `# Title` line of the file just created. Then follow step 3c of the `knowledge-wiki-concept` skill.
 
 ---
 
@@ -236,9 +236,25 @@ Output is a single integer: the number of pairs pruned. If `0`, print `Check 8: 
 
 ---
 
+## Check 9 — Stale Dismissed Cluster Parents
+
+_Removes entries from the cluster dismissal list in `Wiki/.state.json` whose concept files now exist on disk._
+
+### 13. Prune stale dismissed cluster parents
+
+Run:
+
+```bash
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs prune-cluster-parents
+```
+
+Output is a single integer: the number of entries pruned. If `0`, print `Check 9: no stale dismissed cluster parents.`
+
+---
+
 ## Final Steps
 
-### 13. Print summary
+### 14. Print summary
 
 ```
 Knowledge Wiki Lint
@@ -275,4 +291,8 @@ Check 7 · Missing Concept Index Entries
 Check 8 · Stale Dismissed Merge Pairs
   Pruned {N} stale pair(s).
   [or: No stale dismissed pairs.]
+
+Check 9 · Stale Dismissed Cluster Parents
+  Pruned {N} stale cluster parent(s).
+  [or: No stale dismissed cluster parents.]
 ```
