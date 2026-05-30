@@ -32,6 +32,7 @@ jobs:
         env:
           TEST: ${{ inputs.test }}
         run: |
+          rm -rf Wiki/
           FIXTURE=".github/tests/$TEST/fixture"
           if [ -d "$FIXTURE" ]; then
             cp -r "$FIXTURE/." .
