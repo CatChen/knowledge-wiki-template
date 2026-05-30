@@ -47,6 +47,8 @@ Be conservative: dismiss only clusters you are confident are meaningless. A wron
 
 Process one cluster at a time. Use a **separate interaction for each cluster** — never combine multiple clusters into a single question, even if you intend to recommend the same action for several in a row.
 
+Maintain an **in-memory processed set** of `impliedParent` slugs that have been Created, Dismissed, or Skipped in this session. When the cluster list is refreshed after a Create, exclude any cluster whose `impliedParent` is already in this set before continuing.
+
 For each remaining cluster, work through the following sub-steps in order.
 
 ---
@@ -131,13 +133,13 @@ Users may type "stop" in the Other field (or reply "stop") to halt processing of
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-concept "{impliedParent}" "{Display Name}" "{one-line English description}"
    ```
 
-6. **Refresh the cluster list:** The newly created concept file may now appear as a child inside a shallower cluster (e.g. creating `overwatch-2` makes it a child of `[overwatch]`). Re-run:
+6. **Update processed set and refresh the cluster list:** Add `{impliedParent}` to the in-memory processed set. The newly created concept file may now appear as a child inside a shallower cluster (e.g. creating `overwatch-2` makes it a child of `[overwatch]`). Re-run:
 
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs missing-parent-clusters
    ```
 
-   Replace your working cluster list with this fresh output before continuing. Skip this refresh after Dismiss or Skip — no files changed, so the list is still valid.
+   Replace your working cluster list with this fresh output, then remove any cluster whose `impliedParent` is already in the in-memory processed set before continuing. Skip this refresh after Dismiss or Skip — no files changed, so the list is still valid.
 
 ---
 
@@ -147,11 +149,11 @@ Users may type "stop" in the Other field (or reply "stop") to halt processing of
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs dismiss-cluster-parent "{impliedParent}"
 ```
 
-Continue to the next cluster.
+Add `{impliedParent}` to the in-memory processed set. Continue to the next cluster.
 
 #### 4e. If Skip was selected
 
-Continue to the next cluster without recording anything.
+Add `{impliedParent}` to the in-memory processed set. Continue to the next cluster without recording anything.
 
 #### 4f. If "stop"
 
