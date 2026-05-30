@@ -29,19 +29,24 @@ jobs:
           node-version-file: .nvmrc
 
       - name: Copy fixture
+        env:
+          TEST: ${{ inputs.test }}
         run: |
-          FIXTURE=".github/tests/${{ inputs.test }}/fixture"
+          FIXTURE=".github/tests/$TEST/fixture"
           if [ -d "$FIXTURE" ]; then
             cp -r "$FIXTURE/." .
           fi
 
       - name: Run command
-        run: ${{ inputs.command }} > /tmp/stdout.txt
+        env:
+          COMMAND: ${{ inputs.command }}
+        run: eval "$COMMAND" > /tmp/stdout.txt
 
       - name: Detect assertions
         id: detect
+        env:
+          TEST: ${{ inputs.test }}
         run: |
-          TEST="${{ inputs.test }}"
           HAS_FILES=false
           HAS_JSON=false
           HAS_SCRIPT=false
@@ -59,14 +64,18 @@ jobs:
 
       - name: Assert files
         if: steps.detect.outputs.has-files == 'true'
+        env:
+          TEST: ${{ inputs.test }}
         run: |
-          EXPECTED=".github/tests/${{ inputs.test }}/expected"
+          EXPECTED=".github/tests/$TEST/expected"
           # diff -r each subdirectory of expected/ against its counterpart at
           # the repo root. This is bidirectional: missing files and unexpected
           # extra files both cause a failure.
+          ENTRY_COUNT=0
           FAIL=0
           for entry in "$EXPECTED"/*/; do
             [ -d "$entry" ] || continue
+            ENTRY_COUNT=$((ENTRY_COUNT + 1))
             dir=$(basename "$entry")
             if [ ! -d "$dir" ]; then
               echo "Missing expected directory: $dir"
@@ -76,14 +85,23 @@ jobs:
               FAIL=1
             fi
           done
+          if [ "$ENTRY_COUNT" -eq 0 ]; then
+            echo "expected/ contains no subdirectories — nothing was asserted." >&2
+            echo "Place expected files inside a named subdirectory, e.g. expected/Wiki/index.md" >&2
+            exit 1
+          fi
           [ "$FAIL" -eq 0 ]
 
       - name: Assert JSON output
         if: steps.detect.outputs.has-json == 'true'
+        env:
+          TEST: ${{ inputs.test }}
         run: |
-          diff <(jq -S . ".github/tests/${{ inputs.test }}/expected.json") \
+          diff <(jq -S . ".github/tests/$TEST/expected.json") \
                <(jq -S . /tmp/stdout.txt)
 
       - name: Run assert script
         if: steps.detect.outputs.has-script == 'true'
-        run: bash ".github/tests/${{ inputs.test }}/assert.sh"
+        env:
+          TEST: ${{ inputs.test }}
+        run: bash ".github/tests/$TEST/assert.sh"
