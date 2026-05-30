@@ -16,6 +16,12 @@ jobs:
       test: wiki-state--find-unprocessed-summaries--first-run
       command: node scripts/wiki/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-concept
 
+  find-unprocessed-summaries--after-last-run:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-state--find-unprocessed-summaries--after-last-run
+      command: node scripts/wiki/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-concept
+
   find-unprocessed-summaries--no-date:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
@@ -39,3 +45,15 @@ jobs:
     with:
       test: wiki-state--prune-merge-pairs
       command: node scripts/wiki/wiki-state.mjs prune-merge-pairs
+
+  dismiss-cluster-parent:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-state--dismiss-cluster-parent
+      command: node scripts/wiki/wiki-state.mjs dismiss-cluster-parent "parent-topic"
+
+  prune-cluster-parents:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-state--prune-cluster-parents
+      command: node scripts/wiki/wiki-state.mjs prune-cluster-parents

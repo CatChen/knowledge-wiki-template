@@ -22,11 +22,23 @@ jobs:
       test: wiki-index--upsert-concept--insert
       command: node scripts/wiki/wiki-index.mjs upsert-concept "my-topic" "My Topic" "A test concept"
 
+  upsert-concept--insert--sorted:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-index--upsert-concept--insert--sorted
+      command: node scripts/wiki/wiki-index.mjs upsert-concept "apple" "Apple" "First alphabetically"
+
   upsert-concept--update:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-index--upsert-concept--update
       command: node scripts/wiki/wiki-index.mjs upsert-concept "my-topic" "My Topic" "Updated description"
+
+  upsert-concept--update--sorted:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-index--upsert-concept--update--sorted
+      command: node scripts/wiki/wiki-index.mjs upsert-concept "alpha" "Zeta" "Renamed to last"
 
   delete-concept:
     uses: ./.github/workflows/wiki-test-runner.yml
@@ -40,11 +52,23 @@ jobs:
       test: wiki-index--upsert-summary--insert
       command: node scripts/wiki/wiki-index.mjs upsert-summary "Notes/my-note.summary" "A test summary"
 
+  upsert-summary--insert--sorted:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-index--upsert-summary--insert--sorted
+      command: node scripts/wiki/wiki-index.mjs upsert-summary "Notes/m-note.summary" "M note"
+
   upsert-summary--update:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-index--upsert-summary--update
       command: node scripts/wiki/wiki-index.mjs upsert-summary "Notes/my-note.summary" "Updated summary"
+
+  upsert-summary--update--sorted:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-index--upsert-summary--update--sorted
+      command: node scripts/wiki/wiki-index.mjs upsert-summary "Notes/z-note.summary" "Z note updated"
 
   delete-summary:
     uses: ./.github/workflows/wiki-test-runner.yml
@@ -68,6 +92,12 @@ jobs:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-index--find-missing-concepts--empty
+      command: node scripts/wiki/wiki-index.mjs find-missing-concepts
+
+  find-missing-concepts--unindexed:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-index--find-missing-concepts--unindexed
       command: node scripts/wiki/wiki-index.mjs find-missing-concepts
 
   remove-dead-links:

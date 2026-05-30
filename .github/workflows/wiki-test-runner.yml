@@ -63,3 +63,9 @@ jobs:
           EXPECTED=".github/tests/${{ inputs.test }}/expected.json"
           [ -f "$EXPECTED" ] || exit 0
           diff <(jq -S . "$EXPECTED") <(jq -S . /tmp/stdout.txt)
+
+      - name: Run assert script
+        run: |
+          ASSERT=".github/tests/${{ inputs.test }}/assert.sh"
+          [ -f "$ASSERT" ] || exit 0
+          bash "$ASSERT"
