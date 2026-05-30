@@ -5,7 +5,7 @@ description: 'Audit and repair the knowledge wiki. Detects orphan summaries (sou
 
 # Knowledge Wiki Lint
 
-Health-check and repair the wiki. Runs four checks in sequence — each builds on a clean state left by the previous one. JavaScript handles all file-system detection; the LLM handles any repair that requires judgment.
+Health-check and repair the wiki. Runs nine checks in sequence — each builds on a clean state left by the previous one. JavaScript handles all file-system detection; the LLM handles any repair that requires judgment.
 
 ## Setup
 
@@ -236,9 +236,25 @@ Output is a single integer: the number of pairs pruned. If `0`, print `Check 8: 
 
 ---
 
+## Check 9 — Stale Dismissed Cluster Parents
+
+_Removes entries from the cluster dismissal list in `Wiki/.state.json` whose concept files now exist on disk._
+
+### 13. Prune stale dismissed cluster parents
+
+Run:
+
+```bash
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs prune-cluster-parents
+```
+
+Output is a single integer: the number of entries pruned. If `0`, print `Check 9: no stale dismissed cluster parents.`
+
+---
+
 ## Final Steps
 
-### 13. Print summary
+### 14. Print summary
 
 ```
 Knowledge Wiki Lint
@@ -275,4 +291,8 @@ Check 7 · Missing Concept Index Entries
 Check 8 · Stale Dismissed Merge Pairs
   Pruned {N} stale pair(s).
   [or: No stale dismissed pairs.]
+
+Check 9 · Stale Dismissed Cluster Parents
+  Pruned {N} stale cluster parent(s).
+  [or: No stale dismissed cluster parents.]
 ```
