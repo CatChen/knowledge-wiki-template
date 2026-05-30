@@ -112,21 +112,23 @@ Then execute:
 
 1. **Integrate prose**: Add any information from the secondary's body not already covered in the primary — extend existing paragraphs or add new ones. Write in the primary's established voice and style, using American English spelling (e.g. "organize" not "organise", "recognize" not "recognise"). Convert any British spellings from the secondary's text before integrating.
 
-2. **Write the primary file** back to disk with the integrated prose from step 1 only — Sources and Connected Concepts will be handled by the scripts below.
+2. **Merge tags**: Take the union of the `tags` arrays from both concepts' frontmatter. Preserve the primary's existing tag order, then append any tags from the secondary that are not already present. If either concept's frontmatter omits the `tags` field entirely, treat it as an empty array. Use this combined list as the primary's new `tags` value.
 
-3. **Merge Sources**: For each `## Sources` entry in the secondary, extract the summary path (the content between `[[` and `]]`) and run:
+3. **Write the primary file** back to disk with the integrated prose from step 1 and the merged tags from step 2 — Sources and Connected Concepts will be handled by the scripts below.
+
+4. **Merge Sources**: For each `## Sources` entry in the secondary, extract the summary path (the content between `[[` and `]]`) and run:
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-source "{primary-slug}" "{summary-path}"
    ```
    The command is idempotent — entries already in the primary are skipped automatically.
 
-4. **Merge Connected Concepts**: For each `## Connected Concepts` entry in the secondary, extract the linked slug and display name (from `[[Wiki/Concepts/{slug}|{Display Name}]]`), skip any self-reference to the secondary's own slug, then run:
+5. **Merge Connected Concepts**: For each `## Connected Concepts` entry in the secondary, extract the linked slug and display name (from `[[Wiki/Concepts/{slug}|{Display Name}]]`), skip any self-reference to the secondary's own slug, then run:
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{primary-slug}" "{linked-slug}" "{Display Name}"
    ```
    The command is idempotent — entries already in the primary are skipped automatically.
 
-5. **Update backlinks**: Run:
+6. **Update backlinks**: Run:
 
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/update-concept-backlinks.mjs {secondary-path} {primary-path} "{primary display name}"
@@ -134,13 +136,13 @@ Then execute:
 
    This finds every wiki file that links to the secondary concept and handles each one correctly: if the file already has a link to the primary, it removes the secondary link line to avoid creating a duplicate; otherwise it replaces the secondary wikilink with the primary.
 
-6. **Delete the secondary file**:
+7. **Delete the secondary file**:
 
    ```bash
    rm {KNOWLEDGE_PATH}/{secondary-path}
    ```
 
-7. **Update the index**: Run:
+8. **Update the index**: Run:
 
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs delete-concept "{secondary-slug}"
