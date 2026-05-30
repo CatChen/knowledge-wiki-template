@@ -38,7 +38,7 @@ jobs:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-index--upsert-concept--update--sorted
-      command: node scripts/wiki/wiki-index.mjs upsert-concept "alpha" "Zeta" "Renamed to last"
+      command: node scripts/wiki/wiki-index.mjs upsert-concept "banana" "Banana" "Updated description"
 
   delete-concept:
     uses: ./.github/workflows/wiki-test-runner.yml

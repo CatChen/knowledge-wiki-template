@@ -2,8 +2,8 @@
 
 ## Concepts
 
-- [[Wiki/Concepts/alpha|Alpha]] — First entry
-- [[Wiki/Concepts/gamma|Gamma]] — Second entry
+- [[Wiki/Concepts/banana|Banana]] — Original description
+- [[Wiki/Concepts/cherry|Cherry]] — Another concept
 
 ## Summaries
 

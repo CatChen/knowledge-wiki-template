@@ -2,8 +2,8 @@
 
 ## Concepts
 
-- [[Wiki/Concepts/gamma|Gamma]] — Second entry
-- [[Wiki/Concepts/alpha|Zeta]] — Renamed to last
+- [[Wiki/Concepts/banana|Banana]] — Updated description
+- [[Wiki/Concepts/cherry|Cherry]] — Another concept
 
 ## Summaries
 
