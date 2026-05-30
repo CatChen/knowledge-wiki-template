@@ -4,28 +4,28 @@ on:
   workflow_call:
 
 jobs:
-  sort-uninitiated:
+  sort--uninitiated:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-index--sort-uninitiated
+      test: wiki-index--sort--uninitiated
       command: node scripts/wiki/wiki-index.mjs sort
 
-  sort-existing:
+  sort--existing:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-index--sort-existing
+      test: wiki-index--sort--existing
       command: node scripts/wiki/wiki-index.mjs sort
 
-  upsert-concept:
+  upsert-concept--insert:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-index--upsert-concept
+      test: wiki-index--upsert-concept--insert
       command: node scripts/wiki/wiki-index.mjs upsert-concept "my-topic" "My Topic" "A test concept"
 
-  upsert-concept-update:
+  upsert-concept--update:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-index--upsert-concept-update
+      test: wiki-index--upsert-concept--update
       command: node scripts/wiki/wiki-index.mjs upsert-concept "my-topic" "My Topic" "Updated description"
 
   delete-concept:
@@ -34,11 +34,17 @@ jobs:
       test: wiki-index--delete-concept
       command: node scripts/wiki/wiki-index.mjs delete-concept "my-topic"
 
-  upsert-summary:
+  upsert-summary--insert:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-index--upsert-summary
+      test: wiki-index--upsert-summary--insert
       command: node scripts/wiki/wiki-index.mjs upsert-summary "Notes/my-note.summary" "A test summary"
+
+  upsert-summary--update:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-index--upsert-summary--update
+      command: node scripts/wiki/wiki-index.mjs upsert-summary "Notes/my-note.summary" "Updated summary"
 
   delete-summary:
     uses: ./.github/workflows/wiki-test-runner.yml
@@ -46,22 +52,22 @@ jobs:
       test: wiki-index--delete-summary
       command: node scripts/wiki/wiki-index.mjs delete-summary "Notes/my-note.summary"
 
-  find-missing-summaries-empty:
+  find-missing-summaries--empty:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-index--find-missing-summaries-empty
+      test: wiki-index--find-missing-summaries--empty
       command: node scripts/wiki/wiki-index.mjs find-missing-summaries
 
-  find-missing-summaries:
+  find-missing-summaries--unindexed:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-index--find-missing-summaries
+      test: wiki-index--find-missing-summaries--unindexed
       command: node scripts/wiki/wiki-index.mjs find-missing-summaries
 
-  find-missing-concepts-empty:
+  find-missing-concepts--empty:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-index--find-missing-concepts-empty
+      test: wiki-index--find-missing-concepts--empty
       command: node scripts/wiki/wiki-index.mjs find-missing-concepts
 
   remove-dead-links:

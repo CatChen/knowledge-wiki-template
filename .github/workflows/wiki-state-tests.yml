@@ -4,28 +4,28 @@ on:
   workflow_call:
 
 jobs:
-  find-unprocessed-summaries-empty:
+  find-unprocessed-summaries--empty:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-state--find-unprocessed-summaries-empty
+      test: wiki-state--find-unprocessed-summaries--empty
       command: node scripts/wiki/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-concept
 
-  find-unprocessed-summaries-first-run:
+  find-unprocessed-summaries--first-run:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-state--find-unprocessed-summaries-first-run
+      test: wiki-state--find-unprocessed-summaries--first-run
       command: node scripts/wiki/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-concept
 
-  find-unprocessed-summaries-no-date:
+  find-unprocessed-summaries--no-date:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-state--find-unprocessed-summaries-no-date
+      test: wiki-state--find-unprocessed-summaries--no-date
       command: node scripts/wiki/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-concept
 
-  set-last-run:
+  set-last-run--knowledge-wiki-concept:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-state--set-last-run
+      test: wiki-state--set-last-run--knowledge-wiki-concept
       command: node scripts/wiki/wiki-state.mjs set-last-run knowledge-wiki-concept
 
   dismiss-merge-pair:

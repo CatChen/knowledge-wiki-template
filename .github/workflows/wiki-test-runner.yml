@@ -41,17 +41,21 @@ jobs:
         run: |
           EXPECTED=".github/tests/${{ inputs.test }}/expected"
           [ -d "$EXPECTED" ] || exit 0
+          # diff -r each subdirectory of expected/ against its counterpart at
+          # the repo root. This is bidirectional: missing files and unexpected
+          # extra files both cause a failure.
           FAIL=0
-          while IFS= read -r -d '' expected_file; do
-            rel="${expected_file#$EXPECTED/}"
-            if [ ! -f "$rel" ]; then
-              echo "Missing expected file: $rel"
+          for entry in "$EXPECTED"/*/; do
+            [ -d "$entry" ] || continue
+            dir=$(basename "$entry")
+            if [ ! -d "$dir" ]; then
+              echo "Missing expected directory: $dir"
               FAIL=1
-            elif ! diff "$expected_file" "$rel"; then
-              echo "File mismatch: $rel"
+            elif ! diff -r "$entry" "$dir"; then
+              echo "Directory mismatch: $dir"
               FAIL=1
             fi
-          done < <(find "$EXPECTED" -type f -print0)
+          done
           [ "$FAIL" -eq 0 ]
 
       - name: Assert JSON output
