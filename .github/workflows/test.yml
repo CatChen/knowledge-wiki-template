@@ -4,17 +4,8 @@ on:
   pull_request:
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+  wiki-index:
+    uses: ./.github/workflows/wiki-index-tests.yml
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: .nvmrc
-
-      - name: wiki-index.mjs
-        run: bash .github/tests/wiki-index.sh
-
-      - name: wiki-state.mjs
-        run: bash .github/tests/wiki-state.sh
+  wiki-state:
+    uses: ./.github/workflows/wiki-state-tests.yml

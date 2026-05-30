@@ -1,0 +1,41 @@
+name: wiki-state.mjs Tests
+
+on:
+  workflow_call:
+
+jobs:
+  find-unprocessed-summaries-empty:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-state--find-unprocessed-summaries-empty
+      command: node scripts/wiki/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-concept
+
+  find-unprocessed-summaries-first-run:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-state--find-unprocessed-summaries-first-run
+      command: node scripts/wiki/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-concept
+
+  find-unprocessed-summaries-no-date:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-state--find-unprocessed-summaries-no-date
+      command: node scripts/wiki/wiki-state.mjs find-unprocessed-summaries knowledge-wiki-concept
+
+  set-last-run:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-state--set-last-run
+      command: node scripts/wiki/wiki-state.mjs set-last-run knowledge-wiki-concept
+
+  dismiss-merge-pair:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-state--dismiss-merge-pair
+      command: node scripts/wiki/wiki-state.mjs dismiss-merge-pair "Wiki/Concepts/foo.md" "Wiki/Concepts/bar.md"
+
+  prune-merge-pairs:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-state--prune-merge-pairs
+      command: node scripts/wiki/wiki-state.mjs prune-merge-pairs

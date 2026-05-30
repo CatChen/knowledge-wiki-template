@@ -1,0 +1,61 @@
+name: Wiki Test Runner
+
+on:
+  workflow_call:
+    inputs:
+      test:
+        required: true
+        type: string
+        description: >
+          Test case name. Maps to .github/tests/<name>/ which may contain:
+            fixture/   — copied to repo root before running the command
+            expected/  — each file is diffed against the corresponding repo-root file
+            expected.json — diffed against the command's stdout (JSON-normalized)
+      command:
+        required: true
+        type: string
+        description: Shell command to run (e.g. "node scripts/wiki/wiki-index.mjs sort")
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    name: ${{ inputs.test }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Copy fixture
+        run: |
+          FIXTURE=".github/tests/${{ inputs.test }}/fixture"
+          if [ -d "$FIXTURE" ]; then
+            cp -r "$FIXTURE/." .
+          fi
+
+      - name: Run command
+        run: ${{ inputs.command }} > /tmp/stdout.txt
+
+      - name: Assert files
+        run: |
+          EXPECTED=".github/tests/${{ inputs.test }}/expected"
+          [ -d "$EXPECTED" ] || exit 0
+          FAIL=0
+          while IFS= read -r -d '' expected_file; do
+            rel="${expected_file#$EXPECTED/}"
+            if [ ! -f "$rel" ]; then
+              echo "Missing expected file: $rel"
+              FAIL=1
+            elif ! diff "$expected_file" "$rel"; then
+              echo "File mismatch: $rel"
+              FAIL=1
+            fi
+          done < <(find "$EXPECTED" -type f -print0)
+          [ "$FAIL" -eq 0 ]
+
+      - name: Assert JSON output
+        run: |
+          EXPECTED=".github/tests/${{ inputs.test }}/expected.json"
+          [ -f "$EXPECTED" ] || exit 0
+          diff <(jq -S . "$EXPECTED") <(jq -S . /tmp/stdout.txt)

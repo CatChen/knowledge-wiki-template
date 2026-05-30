@@ -1,0 +1,10 @@
+{
+  "knowledge-wiki-merge": {
+    "dismissedPairs": [
+      [
+        "Wiki/Concepts/bar.md",
+        "Wiki/Concepts/foo.md"
+      ]
+    ]
+  }
+}

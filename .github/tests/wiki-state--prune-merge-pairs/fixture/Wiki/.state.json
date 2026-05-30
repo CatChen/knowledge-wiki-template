@@ -1,0 +1,10 @@
+{
+  "knowledge-wiki-merge": {
+    "dismissedPairs": [
+      [
+        "Wiki/Concepts/missing-a.md",
+        "Wiki/Concepts/missing-b.md"
+      ]
+    ]
+  }
+}
