@@ -34,6 +34,12 @@ jobs:
       test: wiki-concept--delete-source--found
       command: node scripts/wiki/wiki-concept.mjs delete-source "my-topic" "Wiki/Summaries/Notes/existing.summary"
 
+  delete-source--not-found:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--delete-source--not-found
+      command: node scripts/wiki/wiki-concept.mjs delete-source "my-topic" "Wiki/Summaries/Notes/nonexistent.summary"
+
   insert-connected-concept--insert:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
@@ -63,12 +69,6 @@ jobs:
     with:
       test: wiki-concept--delete-connected-concept--bare
       command: node scripts/wiki/wiki-concept.mjs delete-connected-concept "foo" "bar"
-
-  delete-source--not-found:
-    uses: ./.github/workflows/wiki-test-runner.yml
-    with:
-      test: wiki-concept--delete-source--not-found
-      command: node scripts/wiki/wiki-concept.mjs delete-source "my-topic" "Wiki/Summaries/Notes/nonexistent.summary"
 
   delete-connected-concept--not-found:
     uses: ./.github/workflows/wiki-test-runner.yml
