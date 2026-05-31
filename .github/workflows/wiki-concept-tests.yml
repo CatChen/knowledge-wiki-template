@@ -1,0 +1,65 @@
+name: wiki-concept.mjs Tests
+
+on:
+  workflow_call:
+
+jobs:
+  create--new:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--create--new
+      command: node scripts/wiki/wiki-concept.mjs create "my-topic" "My Topic"
+
+  create--synthesis:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--create--synthesis
+      command: node scripts/wiki/wiki-concept.mjs create "my-topic" "My Topic" --type Synthesis --icon notepad
+
+  insert-source--insert:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--insert-source--insert
+      command: node scripts/wiki/wiki-concept.mjs insert-source "my-topic" "Wiki/Summaries/Notes/new.summary"
+
+  insert-source--idempotent:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--insert-source--idempotent
+      command: node scripts/wiki/wiki-concept.mjs insert-source "my-topic" "Wiki/Summaries/Notes/existing.summary"
+
+  delete-source--found:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--delete-source--found
+      command: node scripts/wiki/wiki-concept.mjs delete-source "my-topic" "Wiki/Summaries/Notes/existing.summary"
+
+  insert-connected-concept--insert:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--insert-connected-concept--insert
+      command: node scripts/wiki/wiki-concept.mjs insert-connected-concept "foo" "bar" "Bar"
+
+  insert-connected-concept--idempotent:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--insert-connected-concept--idempotent
+      command: node scripts/wiki/wiki-concept.mjs insert-connected-concept "foo" "bar" "Bar"
+
+  insert-connected-concept--self-link:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--insert-connected-concept--self-link
+      command: node scripts/wiki/wiki-concept.mjs insert-connected-concept "foo" "foo" "Foo"
+
+  delete-connected-concept--aliased:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--delete-connected-concept--aliased
+      command: node scripts/wiki/wiki-concept.mjs delete-connected-concept "foo" "bar"
+
+  delete-connected-concept--bare:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--delete-connected-concept--bare
+      command: node scripts/wiki/wiki-concept.mjs delete-connected-concept "foo" "bar"

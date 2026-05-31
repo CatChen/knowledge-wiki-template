@@ -3,6 +3,10 @@
  *
  * After merging two concepts, updates all wiki files that link to the secondary
  * concept. For each line containing the secondary wikilink:
+ *   - If the file being updated IS the primary concept file:
+ *     - Connected Concepts bullet lines: delete (replacing would create a self-link).
+ *     - All other lines (body bullets, prose): rewrite the secondary wikilink to
+ *       plain text so the link isn't broken after the secondary file is deleted.
  *   - If the primary concept already appears in the same Markdown list block:
  *     delete the secondary link line (replacing would create a duplicate).
  *   - Otherwise: replace the secondary wikilink with the primary wikilink.
@@ -55,7 +59,7 @@ function hasPrimaryLink(line) {
 }
 
 const secondaryLinkRe = new RegExp(
-  `\\[\\[${escapeRegex(secondaryPrefix)}(?:\\|[^\\]]+)?\\]\\]`,
+  `\\[\\[${escapeRegex(secondaryPrefix)}(?:\\|([^\\]]+))?\\]\\]`,
 );
 
 /** Returns the range [start, end] (inclusive) of the contiguous list block
@@ -81,15 +85,36 @@ for (const fromRel of backlinkFiles) {
   const fullPath = path.join(KNOWLEDGE_DIR, fromRel);
   const original = fs.readFileSync(fullPath, 'utf8');
   const lines = original.split('\n');
+
+  const isPrimaryFile = fromRel === primaryPath;
+
+  // Pre-compute ## Connected Concepts line range so we can scope deletions.
+  let ccStart = -1, ccEnd = lines.length;
+  for (let j = 0; j < lines.length; j++) {
+    if (lines[j] === '## Connected Concepts') { ccStart = j; continue; }
+    if (ccStart !== -1 && ccEnd === lines.length && lines[j].startsWith('## ')) { ccEnd = j; break; }
+  }
+
+  const secondarySlug = secondaryPrefix.split('/').pop();
   const result = lines.map((line, i) => {
     if (!secondaryLinkRe.test(line)) return line;
+
+    // When processing the primary file itself:
+    // - CC bullet lines: delete (secondary content is now part of the primary)
+    // - Everything else (body bullets, prose): rewrite the wikilink to plain
+    //   text to avoid a broken link after the secondary file is deleted.
+    if (isPrimaryFile) {
+      const inCC = ccStart !== -1 && i > ccStart && i < ccEnd;
+      if (inCC && /^\s*[-*]\s/.test(line)) return null;
+      return line.replace(secondaryLinkRe, (_, displayName) => displayName ?? secondarySlug);
+    }
 
     const { start, end } = listBlockAround(lines, i);
     const block = lines.slice(start, end + 1);
     const primaryInSameList = block.some(hasPrimaryLink);
 
     if (primaryInSameList) {
-      return null; // mark for deletion
+      return null; // mark for deletion (duplicate)
     }
     return line.replace(secondaryLinkRe, replacementLink);
   });

@@ -7,6 +7,9 @@ on:
   pull_request:
 
 jobs:
+  wiki-concept:
+    uses: ./.github/workflows/wiki-concept-tests.yml
+
   wiki-index:
     uses: ./.github/workflows/wiki-index-tests.yml
 

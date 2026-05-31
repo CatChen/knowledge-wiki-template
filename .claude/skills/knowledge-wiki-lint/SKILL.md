@@ -5,7 +5,7 @@ description: 'Audit and repair the knowledge wiki. Detects orphan summaries (sou
 
 # Knowledge Wiki Lint
 
-Health-check and repair the wiki. Runs nine checks in sequence — each builds on a clean state left by the previous one. JavaScript handles all file-system detection; the LLM handles any repair that requires judgment.
+Health-check and repair the wiki. Runs ten checks in sequence — each builds on a clean state left by the previous one. JavaScript handles all file-system detection; the LLM handles any repair that requires judgment.
 
 ## Setup
 
@@ -252,9 +252,33 @@ Output is a single integer: the number of entries pruned. If `0`, print `Check 9
 
 ---
 
+## Check 10 — Self-Links in Connected Concepts
+
+_Removes Connected Concepts entries where a concept links to itself._
+
+### 14. Find and remove self-links
+
+Run:
+
+```bash
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs self-links
+```
+
+Output is a JSON object keyed by concept file path. If empty (`{}`), print `Check 10: no self-links.` and skip to Final Steps.
+
+For each concept file in the output:
+
+1. Derive the slug (basename without `.md`). Example: `Wiki/Concepts/foo-bar.md` → `foo-bar`.
+2. Remove the self-referencing Connected Concepts entry:
+   ```bash
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs delete-connected-concept "{slug}" "{slug}"
+   ```
+
+---
+
 ## Final Steps
 
-### 14. Print summary
+### 15. Print summary
 
 ```
 Knowledge Wiki Lint
@@ -295,4 +319,8 @@ Check 8 · Stale Dismissed Merge Pairs
 Check 9 · Stale Dismissed Cluster Parents
   Pruned {N} stale cluster parent(s).
   [or: No stale dismissed cluster parents.]
+
+Check 10 · Self-Links in Connected Concepts
+  Removed {N} self-link(s) from {M} concept file(s).
+  [or: No self-links found.]
 ```
