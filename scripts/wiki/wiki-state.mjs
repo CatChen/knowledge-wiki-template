@@ -29,7 +29,8 @@
  * dismiss-cluster-parent adds an implied-parent slug to the dismissed list so it is
  *   never shown again by knowledge-wiki-cluster.
  * prune-cluster-parents removes dismissed parent slugs whose concept file now
- *   exists on disk (cluster was resolved). Prints the count of removed entries.
+ *   exists on disk (cluster was resolved), or whose descendant concept files
+ *   ({slug}-*.md) are all gone. Prints the count of removed entries.
  */
 
 import fs from 'fs';
