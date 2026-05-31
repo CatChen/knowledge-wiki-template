@@ -256,11 +256,12 @@ function duplicateConceptLinks() {
       if (inKeyC && line.startsWith('## ')) break;
       // Only collect canonical bullet entries: "- [[Wiki/Concepts/...]]".
       // Prose or note lines that happen to mention a concept are not entries.
-      const stripped = line.trimStart().replace(/^[-*]\s+/, '');
-      if (!inKeyC || !/^[-*]\s/.test(line.trimStart()) || !stripped.startsWith('[[Wiki/Concepts/')) continue;
+      const stripped = line.replace(/^- /, '');
+      if (!inKeyC || !line.startsWith('- ') || !stripped.startsWith('[[Wiki/Concepts/')) continue;
 
-      // Only the leading wikilink is the entry target — secondary links in
-      // descriptions are not concept entries and should not be counted.
+      // Each bullet is an entry for exactly one concept — the leading wikilink
+      // after the bullet marker. Secondary wikilinks in the description are not
+      // entry targets and must not be counted.
       conceptLinkRe.lastIndex = 0;
       const match = conceptLinkRe.exec(stripped);
       if (!match) continue;

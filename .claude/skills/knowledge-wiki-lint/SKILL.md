@@ -296,24 +296,27 @@ For each summary file and each duplicated concept within it:
 
 1. Read all duplicate lines for that concept.
 2. Derive the concept slug from `conceptPath` (basename without `.md`). Example: `Wiki/Concepts/hong-kong.md` → `hong-kong`.
-3. Extract the display name from any duplicate line (the `|Display Name` part of the wikilink). If the entries use bare links with no display name, read the concept file title (`# Title` line) and use that as the display name, falling back to the slug in title-case if the file is missing.
-4. Write a single combined description that merges the key facts from all duplicate entries. **Write the description in the same language as the source summary** (most summaries are non-English). Example:
+3. Extract the display name from any duplicate line (the `|Display Name` part of the wikilink). If the links are bare (no `|` alias), read the concept file's `# Title` line and use that as the display name.
+4. Write a single combined description that merges the key facts from all duplicate entries. **Write the description in the same language as the original entries.** Example:
    - Line 1: `- [[Wiki/Concepts/hong-kong|Hong Kong]] — Gray market goods helping both economies`
    - Line 2: `- [[Wiki/Concepts/hong-kong|Hong Kong]] — Disney used it as negotiating leverage`
    - Combined description: `Gray market goods trade channel and Disney's negotiating leverage for mainland market entry`
-5. Delete all duplicate entries for that concept using `--from-json` so the path and slug are never shell-interpolated:
+5. Delete all duplicate entries for that concept. Pass all fields via a single-quoted heredoc so that summary paths containing quotes or other shell-special characters are safe:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs delete-concept --from-json <<'ARGS'
-   {"relPath": "{summary-rel-path}", "slug": "{concept-slug}"}
-   ARGS
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs delete-concept - <<'EOF'
+   {summary-rel-path}
+   {concept-slug}
+   EOF
    ```
-6. Insert the single combined entry using `--from-json` so all values — path, slug, display name, and description — are passed through the shell-safe heredoc body and never expanded by the shell:
+6. Insert the single combined entry the same way — all four fields via heredoc, one per line:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs insert-concept --from-json <<'ARGS'
-   {"relPath": "{summary-rel-path}", "slug": "{concept-slug}", "displayName": "{display-name}", "description": "{combined-description}"}
-   ARGS
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs insert-concept - <<'EOF'
+   {summary-rel-path}
+   {concept-slug}
+   {display-name}
+   {combined-description}
+   EOF
    ```
-   JSON-escape any `"` or `\` inside the values. The single-quoted `'ARGS'` heredoc delimiter prevents the shell from expanding `$`, backticks, or any other special characters in the JSON body.
 
 ---
 

@@ -7,8 +7,8 @@
  * Usage:
  *   node scripts/wiki/wiki-summary.mjs list-stale
  *   node scripts/wiki/wiki-summary.mjs create <source-path> [--at <ISO timestamp>]
- *   node scripts/wiki/wiki-summary.mjs delete-concept <summary-rel-path> <concept-slug>
- *   node scripts/wiki/wiki-summary.mjs insert-concept <summary-rel-path> <concept-slug> <display-name> <description>
+ *   node scripts/wiki/wiki-summary.mjs delete-concept - | <summary-rel-path> <concept-slug>
+ *   node scripts/wiki/wiki-summary.mjs insert-concept - | <summary-rel-path> <concept-slug> <display-name> <description|->
  *
  * Subcommands:
  *   list-stale
@@ -20,19 +20,21 @@
  *       (relative to KNOWLEDGE_DIR). Computes and writes the hash automatically.
  *       Prints the summary file rel-path so the skill knows where to edit.
  *
- *   delete-concept [--from-json | <summary-rel-path> <concept-slug>]
- *       Remove all bullet lines containing [[Wiki/Concepts/<concept-slug>|...]] or
- *       [[Wiki/Concepts/<concept-slug>]] from the ## Key Concepts section.
- *       --from-json: read {"relPath","slug"} as JSON from stdin (heredoc-safe).
- *       <summary-rel-path>: path relative to the knowledge root, e.g.
- *         Wiki/Summaries/Twitter/Tweets-foo.summary.md
+ *   delete-concept - | <summary-rel-path> <concept-slug>
+ *       Remove all Key Concepts bullet entries for <concept-slug> from the summary.
+ *       Pass - as the first argument to read both fields from stdin (one per line)
+ *       inside a single-quoted heredoc — required when the path contains quotes or
+ *       other shell-special characters.
  *
- *   insert-concept [--from-json | <summary-rel-path> <concept-slug> <display-name> [<description>]]
+ *   insert-concept - | <summary-rel-path> <concept-slug> <display-name> <description|->
  *       Append "- [[Wiki/Concepts/<slug>|<display-name>]] — <description>" to the
- *       ## Key Concepts section. Idempotent — no-op if the wikilink already exists.
- *       --from-json: read {"relPath","slug","displayName","description"} as JSON from
- *         stdin (heredoc-safe, avoids shell interpolation of $-signs or backticks).
- *       If <description> is omitted (positional form), reads description from stdin.
+ *       ## Key Concepts section. Idempotent — no-op if the concept is already a
+ *       bullet entry.
+ *       Pass - as the first argument to read all four fields from stdin (one per
+ *       line); description is everything from line 4 onward, collapsed to one line.
+ *       Pass - as the description (4th positional arg) to read only the description
+ *       from stdin. Both forms use a single-quoted heredoc (<<'EOF') to protect $,
+ *       backticks, and other shell-special characters.
  */
 
 import fs from 'fs';
@@ -41,14 +43,9 @@ import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { extractBody } from './wiki-graph-lib.mjs';
 import {
-  getBulletsFromSection,
   insertBulletInSection,
   deleteBulletFromSection,
 } from './wiki-section-lib.mjs';
-
-function readJsonStdin() {
-  return JSON.parse(fs.readFileSync(0, 'utf8'));
-}
 
 process.stdout.on('error', err => { if (err.code === 'EPIPE') process.exit(0); });
 
@@ -189,13 +186,16 @@ function cmdCreate(args) {
 
 function cmdDeleteConcept(args) {
   let relPath, slug;
-  if (args[0] === '--from-json') {
-    ({ relPath, slug } = readJsonStdin());
+  if (args[0] === '-') {
+    // Read both fields from stdin (one per line) inside a <<'EOF' heredoc,
+    // safe for paths that contain double quotes or other shell-special characters.
+    const lines = fs.readFileSync(0, 'utf8').split('\n').map(l => l.trimEnd());
+    [relPath, slug] = lines;
   } else {
     [relPath, slug] = args;
   }
   if (!relPath || !slug) {
-    console.error('Usage: node scripts/wiki/wiki-summary.mjs delete-concept [--from-json | <summary-rel-path> <concept-slug>]');
+    console.error('Usage: node scripts/wiki/wiki-summary.mjs delete-concept - | <summary-rel-path> <concept-slug>');
     process.exit(1);
   }
 
@@ -205,16 +205,13 @@ function cmdDeleteConcept(args) {
     process.exit(1);
   }
 
-  const linkWithAlias = `[[Wiki/Concepts/${slug}|`;
-  const linkBare      = `[[Wiki/Concepts/${slug}]]`;
   const content = fs.readFileSync(summaryFull, 'utf8');
+  // Match only bullets where slug is the leading (entry) wikilink, not a
+  // secondary mention in the description.
+  const entryRe = /^- \[\[Wiki\/Concepts\/([^\]|]+)(?:\|[^\]]+)?\]\]/;
   const { content: updated, found } = deleteBulletFromSection(
     content, 'Key Concepts',
-    line => {
-      const stripped = line.trimStart().replace(/^[-*]\s+/, '');
-      return /^[-*]\s/.test(line.trimStart()) &&
-        (stripped.startsWith(linkWithAlias) || stripped.startsWith(linkBare));
-    },
+    line => { const m = entryRe.exec(line); return m !== null && m[1] === slug; },
   );
 
   if (!found) {
@@ -228,21 +225,27 @@ function cmdDeleteConcept(args) {
 
 function cmdInsertConcept(args) {
   let relPath, slug, displayName, description;
-  if (args[0] === '--from-json') {
-    // All values come from a JSON heredoc — no shell interpolation of any argument.
-    ({ relPath, slug, displayName, description } = readJsonStdin());
+
+  if (args[0] === '-') {
+    // All four fields from stdin (one per line) inside a <<'EOF' heredoc,
+    // safe for paths/names that contain double quotes or shell-special chars.
+    // Description is everything from line 4 onward, collapsed to one line.
+    const lines = fs.readFileSync(0, 'utf8').split('\n').map(l => l.trimEnd());
+    relPath = lines[0];
+    slug = lines[1];
+    displayName = lines[2];
+    description = lines.slice(3).filter(Boolean).join(' ').trim();
   } else {
-    const [r, s, d, descArg] = args;
-    [relPath, slug, displayName] = [r, s, d];
-    // Accept description as 4th arg or from stdin (heredoc).
-    description = descArg ?? fs.readFileSync(0, 'utf8').trim();
+    [relPath, slug, displayName] = args;
+    const rawDescription = args[3];
+    // Pass '-' as description to read only it from stdin via <<'EOF'.
+    description = rawDescription === '-'
+      ? fs.readFileSync(0, 'utf8').replace(/\r?\n/g, ' ').trim()
+      : rawDescription;
   }
-  if (!relPath || !slug || !displayName) {
-    console.error('Usage: node scripts/wiki/wiki-summary.mjs insert-concept [--from-json | <summary-rel-path> <concept-slug> <display-name> [<description>]]');
-    process.exit(1);
-  }
-  if (!description) {
-    console.error('insert-concept: description is required (provide as arg or via stdin)');
+
+  if (!relPath || !slug || !displayName || !description) {
+    console.error('Usage: node scripts/wiki/wiki-summary.mjs insert-concept - | <summary-rel-path> <concept-slug> <display-name> <description|->\n  Use - as first arg to read all fields from stdin; or pass - as 4th arg to read only the description.');
     process.exit(1);
   }
 
@@ -254,15 +257,18 @@ function cmdInsertConcept(args) {
 
   const content = fs.readFileSync(summaryFull, 'utf8');
 
-  // Idempotency: check only canonical bullet entries (not prose mentions) for
-  // both aliased [[...| ]] and bare [[...]] forms.
-  const linkWithAlias = `[[Wiki/Concepts/${slug}|`;
-  const linkBare      = `[[Wiki/Concepts/${slug}]]`;
-  const bullets = getBulletsFromSection(content, 'Key Concepts') ?? [];
-  const alreadyPresent = bullets.some(line => {
-    const stripped = line.trimStart().replace(/^[-*]\s+/, '');
-    return stripped.startsWith(linkWithAlias) || stripped.startsWith(linkBare);
-  });
+  // Idempotency: check only bullet entries (leading wikilink), not prose lines.
+  const entryRe = /^- \[\[Wiki\/Concepts\/([^\]|]+)(?:\|[^\]]+)?\]\]/;
+  let inKeyC = false;
+  let alreadyPresent = false;
+  for (const line of content.split('\n')) {
+    if (line === '## Key Concepts') { inKeyC = true; continue; }
+    if (inKeyC && line.startsWith('## ')) break;
+    if (!inKeyC) continue;
+    const m = entryRe.exec(line);
+    if (m && m[1] === slug) { alreadyPresent = true; break; }
+  }
+
   if (alreadyPresent) {
     console.log(`Already present in ${relPath}: ${slug}`);
     return;
