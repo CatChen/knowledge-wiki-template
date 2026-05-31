@@ -5,7 +5,7 @@ description: 'Audit and repair the knowledge wiki. Detects orphan summaries (sou
 
 # Knowledge Wiki Lint
 
-Health-check and repair the wiki. Runs ten checks in sequence — each builds on a clean state left by the previous one. JavaScript handles all file-system detection; the LLM handles any repair that requires judgment.
+Health-check and repair the wiki. Runs eleven checks in sequence — each builds on a clean state left by the previous one. JavaScript handles all file-system detection; the LLM handles any repair that requires judgment.
 
 ## Setup
 
@@ -264,7 +264,7 @@ Run:
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs self-links
 ```
 
-Output is a JSON object keyed by concept file path. If empty (`{}`), print `Check 10: no self-links.` and skip to Final Steps.
+Output is a JSON object keyed by concept file path. If empty (`{}`), print `Check 10: no self-links.` and skip to Check 11.
 
 For each concept file in the output:
 
@@ -276,9 +276,46 @@ For each concept file in the output:
 
 ---
 
+## Check 11 — Duplicate Concept Links in Summaries
+
+_Consolidates Key Concepts entries where the same concept wikilink appears more than once in the same summary, typically caused by merging or folding multiple concepts into a single parent._
+
+### 15. Find summaries with duplicate concept links
+
+Run:
+
+```bash
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs duplicate-concept-links
+```
+
+Output is a JSON object keyed by summary file path. Each value is an array of `{ conceptPath, lines }` objects — one per duplicated concept, listing all the lines that reference it. If empty (`{}`), print `Check 11: no duplicate concept links.` and skip to Final Steps.
+
+### 16. Consolidate duplicate entries
+
+For each summary file and each duplicated concept within it:
+
+1. Read all duplicate lines for that concept.
+2. Derive the concept slug from `conceptPath` (basename without `.md`). Example: `Wiki/Concepts/hong-kong.md` → `hong-kong`.
+3. Extract the display name from any duplicate line (the `|Display Name` part of the wikilink).
+4. Write a single combined description that merges the key facts from all duplicate entries. Example:
+   - Line 1: `- [[Wiki/Concepts/hong-kong|Hong Kong]] — Gray market goods helping both economies`
+   - Line 2: `- [[Wiki/Concepts/hong-kong|Hong Kong]] — Disney used it as negotiating leverage`
+   - Combined description: `Gray market goods trade channel and Disney's negotiating leverage for mainland market entry`
+5. Delete all duplicate entries for that concept:
+   ```bash
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs delete-concept "{summary-rel-path}" "{concept-slug}"
+   ```
+6. Insert the single combined entry:
+   ```bash
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs insert-concept "{summary-rel-path}" "{concept-slug}" "{display-name}" "{combined-description}"
+   ```
+   Double-quote all arguments to protect special characters.
+
+---
+
 ## Final Steps
 
-### 15. Print summary
+### 17. Print summary
 
 ```
 Knowledge Wiki Lint
@@ -323,4 +360,8 @@ Check 9 · Stale Dismissed Cluster Parents
 Check 10 · Self-Links in Connected Concepts
   Removed {N} self-link(s) from {M} concept file(s).
   [or: No self-links found.]
+
+Check 11 · Duplicate Concept Links in Summaries
+  Consolidated {N} duplicate concept link(s) across {M} summary file(s).
+  [or: No duplicate concept links found.]
 ```

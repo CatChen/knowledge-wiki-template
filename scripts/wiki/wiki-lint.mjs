@@ -17,6 +17,7 @@
  *                           concept is grouped under its non-existing prefix ancestors up to (but not
  *                           including) its nearest existing ancestor
  *   self-links              Concept files whose Connected Concepts section links to themselves
+ *   duplicate-concept-links Summary files whose Key Concepts section links to the same concept more than once
  *   all                     Run all checks; output keyed by subcommand name
  */
 
@@ -236,6 +237,64 @@ function selfLinks() {
   return result;
 }
 
+function duplicateConceptLinks() {
+  if (!fs.existsSync(WIKI_SUMMARIES_DIR)) return {};
+  const result = {};
+
+  const conceptLinkRe = /\[\[Wiki\/Concepts\/([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+
+  function scanFile(fullPath, relPath) {
+    const content = fs.readFileSync(fullPath, 'utf8');
+    const lines = content.split('\n');
+
+    // Collect bullet lines in ## Key Concepts section only.
+    let inKeyC = false;
+    const conceptLines = Object.create(null); // conceptPath → [line, ...]
+
+    for (const line of lines) {
+      if (line === '## Key Concepts') { inKeyC = true; continue; }
+      if (inKeyC && line.startsWith('## ')) break;
+      // Only collect canonical bullet entries: "- [[Wiki/Concepts/...]]".
+      // Prose or note lines that happen to mention a concept are not entries.
+      const stripped = line.trimStart().replace(/^[-*]\s+/, '');
+      if (!inKeyC || !/^[-*]\s/.test(line.trimStart()) || !stripped.startsWith('[[Wiki/Concepts/')) continue;
+
+      // Count each concept at most once per line to avoid double-counting
+      // a concept that appears twice in a single malformed entry.
+      const seenOnLine = new Set();
+      let match;
+      conceptLinkRe.lastIndex = 0;
+      while ((match = conceptLinkRe.exec(line)) !== null) {
+        const conceptPath = `Wiki/Concepts/${match[1]}.md`;
+        if (seenOnLine.has(conceptPath)) continue;
+        seenOnLine.add(conceptPath);
+        if (!conceptLines[conceptPath]) conceptLines[conceptPath] = [];
+        conceptLines[conceptPath].push(line.trim());
+      }
+    }
+
+    const duplicates = Object.entries(conceptLines)
+      .filter(([, lines]) => lines.length > 1)
+      .map(([conceptPath, lines]) => ({ conceptPath, lines }));
+
+    if (duplicates.length > 0) result[relPath] = duplicates;
+  }
+
+  function walkDir(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) walkDir(fullPath);
+      else if (entry.isFile() && entry.name.endsWith('.summary.md')) {
+        const relPath = path.relative(KNOWLEDGE_DIR, fullPath);
+        scanFile(fullPath, relPath);
+      }
+    }
+  }
+
+  walkDir(WIKI_SUMMARIES_DIR);
+  return result;
+}
+
 // ── dispatch ──────────────────────────────────────────────────────────────────
 
 const COMMANDS = {
@@ -247,6 +306,7 @@ const COMMANDS = {
   'thin-concepts': thinConcepts,
   'missing-parent-clusters': missingParentClusters,
   'self-links': selfLinks,
+  'duplicate-concept-links': duplicateConceptLinks,
 };
 
 const subcommand = process.argv[2];

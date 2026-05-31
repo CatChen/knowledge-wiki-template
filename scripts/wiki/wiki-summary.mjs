@@ -7,6 +7,8 @@
  * Usage:
  *   node scripts/wiki/wiki-summary.mjs list-stale
  *   node scripts/wiki/wiki-summary.mjs create <source-path> [--at <ISO timestamp>]
+ *   node scripts/wiki/wiki-summary.mjs delete-concept <summary-rel-path> <concept-slug>
+ *   node scripts/wiki/wiki-summary.mjs insert-concept <summary-rel-path> <concept-slug> <display-name> <description>
  *
  * Subcommands:
  *   list-stale
@@ -17,6 +19,16 @@
  *       Create (or overwrite) a skeleton summary file for <source-path>
  *       (relative to KNOWLEDGE_DIR). Computes and writes the hash automatically.
  *       Prints the summary file rel-path so the skill knows where to edit.
+ *
+ *   delete-concept <summary-rel-path> <concept-slug>
+ *       Remove all bullet lines containing [[Wiki/Concepts/<concept-slug>|...]] or
+ *       [[Wiki/Concepts/<concept-slug>]] from the ## Key Concepts section.
+ *       <summary-rel-path>: path relative to the knowledge root, e.g.
+ *         Wiki/Summaries/Twitter/Tweets-foo.summary.md
+ *
+ *   insert-concept <summary-rel-path> <concept-slug> <display-name> <description>
+ *       Append "- [[Wiki/Concepts/<slug>|<display-name>]] — <description>" to the
+ *       ## Key Concepts section. Idempotent — no-op if the wikilink already exists.
  */
 
 import fs from 'fs';
@@ -24,6 +36,11 @@ import path from 'path';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { extractBody } from './wiki-graph-lib.mjs';
+import {
+  sectionContains,
+  insertBulletInSection,
+  deleteBulletFromSection,
+} from './wiki-section-lib.mjs';
 
 process.stdout.on('error', err => { if (err.code === 'EPIPE') process.exit(0); });
 
@@ -162,15 +179,74 @@ function cmdCreate(args) {
   console.log(summaryRel);
 }
 
+function cmdDeleteConcept(args) {
+  const [relPath, slug] = args;
+  if (!relPath || !slug) {
+    console.error('Usage: node scripts/wiki/wiki-summary.mjs delete-concept <summary-rel-path> <concept-slug>');
+    process.exit(1);
+  }
+
+  const summaryFull = path.join(KNOWLEDGE_DIR, relPath);
+  if (!fs.existsSync(summaryFull)) {
+    console.error(`Summary file not found: ${summaryFull}`);
+    process.exit(1);
+  }
+
+  const linkWithAlias = `[[Wiki/Concepts/${slug}|`;
+  const linkBare      = `[[Wiki/Concepts/${slug}]]`;
+  const content = fs.readFileSync(summaryFull, 'utf8');
+  const { content: updated, found } = deleteBulletFromSection(
+    content, 'Key Concepts',
+    line => line.includes(linkWithAlias) || line.includes(linkBare),
+  );
+
+  if (!found) {
+    console.log(`Not found in ${relPath}: ${slug}`);
+    return;
+  }
+
+  fs.writeFileSync(summaryFull, updated, 'utf8');
+  console.log(`Deleted concept from ${relPath}: ${slug}`);
+}
+
+function cmdInsertConcept(args) {
+  const [relPath, slug, displayName, description] = args;
+  if (!relPath || !slug || !displayName || !description) {
+    console.error('Usage: node scripts/wiki/wiki-summary.mjs insert-concept <summary-rel-path> <concept-slug> <display-name> <description>');
+    process.exit(1);
+  }
+
+  const summaryFull = path.join(KNOWLEDGE_DIR, relPath);
+  if (!fs.existsSync(summaryFull)) {
+    console.error(`Summary file not found: ${summaryFull}`);
+    process.exit(1);
+  }
+
+  const content = fs.readFileSync(summaryFull, 'utf8');
+
+  if (sectionContains(content, 'Key Concepts', `[[Wiki/Concepts/${slug}|`)) {
+    console.log(`Already present in ${relPath}: ${slug}`);
+    return;
+  }
+
+  const bullet = `- [[Wiki/Concepts/${slug}|${displayName}]] — ${description}`;
+  const updated = insertBulletInSection(content, 'Key Concepts', bullet);
+  fs.writeFileSync(summaryFull, updated, 'utf8');
+  console.log(`Inserted concept into ${relPath}: ${slug}`);
+}
+
+
 // --- Dispatch ---
 
 const [,, subcommand, ...rest] = process.argv;
 
 switch (subcommand) {
-  case 'list-stale':   cmdListStale(); break;
-  case 'create':       cmdCreate(rest); break;
+  case 'list-stale':      cmdListStale(); break;
+  case 'create':          cmdCreate(rest); break;
+  case 'delete-concept':  cmdDeleteConcept(rest); break;
+  case 'insert-concept':  cmdInsertConcept(rest); break;
   default:
     console.error(`Unknown subcommand: ${subcommand}`);
-    console.error('Subcommands: list-stale, create');
+    console.error('Subcommands: list-stale, create, delete-concept, insert-concept');
     process.exit(1);
 }
