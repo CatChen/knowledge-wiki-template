@@ -57,3 +57,15 @@ jobs:
     with:
       test: wiki-state--prune-cluster-parents
       command: node scripts/wiki/wiki-state.mjs prune-cluster-parents
+
+  prune-cluster-parents--no-descendants:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-state--prune-cluster-parents--no-descendants
+      command: node scripts/wiki/wiki-state.mjs prune-cluster-parents
+
+  prune-cluster-parents--has-descendants:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-state--prune-cluster-parents--has-descendants
+      command: node scripts/wiki/wiki-state.mjs prune-cluster-parents

@@ -184,8 +184,15 @@ if (subcommand === 'find-unprocessed-summaries') {
   const kept = [];
   let removedCount = 0;
 
+  const conceptsDir = path.join(KNOWLEDGE_DIR, 'Wiki', 'Concepts');
+  const allConcepts = fs.existsSync(conceptsDir)
+    ? new Set(fs.readdirSync(conceptsDir).filter(f => f.endsWith('.md')))
+    : new Set();
+
   for (const slug of parents) {
-    if (fs.existsSync(path.join(KNOWLEDGE_DIR, 'Wiki', 'Concepts', `${slug}.md`))) {
+    const parentFileExists = allConcepts.has(`${slug}.md`);
+    const hasDescendants = [...allConcepts].some(f => f.startsWith(`${slug}-`) && f.endsWith('.md'));
+    if (parentFileExists || !hasDescendants) {
       removedCount++;
     } else {
       kept.push(slug);
