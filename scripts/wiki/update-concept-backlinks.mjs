@@ -4,7 +4,9 @@
  * After merging two concepts, updates all wiki files that link to the secondary
  * concept. For each line containing the secondary wikilink:
  *   - If the file being updated IS the primary concept file:
- *     delete the secondary link line (replacing it would create a self-link).
+ *     - Connected Concepts bullet lines: delete (replacing would create a self-link).
+ *     - All other lines (body bullets, prose): rewrite the secondary wikilink to
+ *       plain text so the link isn't broken after the secondary file is deleted.
  *   - If the primary concept already appears in the same Markdown list block:
  *     delete the secondary link line (replacing would create a duplicate).
  *   - Otherwise: replace the secondary wikilink with the primary wikilink.
@@ -102,7 +104,7 @@ for (const fromRel of backlinkFiles) {
     // - Everything else (body bullets, prose): rewrite the wikilink to plain
     //   text to avoid a broken link after the secondary file is deleted.
     if (isPrimaryFile) {
-      const inCC = i > ccStart && i < ccEnd;
+      const inCC = ccStart !== -1 && i > ccStart && i < ccEnd;
       if (inCC && /^\s*[-*]\s/.test(line)) return null;
       return line.replace(secondaryLinkRe, (_, displayName) => displayName ?? secondarySlug);
     }
