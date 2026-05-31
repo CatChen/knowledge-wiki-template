@@ -162,6 +162,11 @@ function cmdInsertConnectedConcept(args) {
     process.exit(1);
   }
 
+  if (linkedSlug === slug) {
+    console.log(`Self-reference skipped: ${slug} → ${linkedSlug}`);
+    return;
+  }
+
   const link = `[[Wiki/Concepts/${linkedSlug}|${displayName}]]`;
   const content = readConcept(slug);
 
@@ -189,10 +194,12 @@ function cmdDeleteConnectedConcept(args) {
     process.exit(1);
   }
 
-  const linkPrefix = `[[Wiki/Concepts/${linkedSlug}|`;
+  const linkWithAlias = `[[Wiki/Concepts/${linkedSlug}|`;
+  const linkBare      = `[[Wiki/Concepts/${linkedSlug}]]`;
   const content = readConcept(slug);
   const { content: updated, found } = deleteBulletFromSection(
-    content, 'Connected Concepts', line => line.includes(linkPrefix),
+    content, 'Connected Concepts',
+    line => line.includes(linkWithAlias) || line.includes(linkBare),
   );
 
   if (!found) {

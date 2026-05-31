@@ -122,7 +122,7 @@ Then execute:
    ```
    The command is idempotent — entries already in the primary are skipped automatically.
 
-5. **Merge Connected Concepts**: For each `## Connected Concepts` entry in the secondary, extract the linked slug and display name (from `[[Wiki/Concepts/{slug}|{Display Name}]]`), skip any self-reference to the secondary's own slug, then run:
+5. **Merge Connected Concepts**: For each `## Connected Concepts` entry in the secondary, extract the linked slug and display name (from `[[Wiki/Concepts/{slug}|{Display Name}]]`), then run:
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{primary-slug}" "{linked-slug}" "{Display Name}"
    ```

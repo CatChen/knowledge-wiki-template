@@ -16,6 +16,7 @@
  *   missing-parent-clusters Groups of 2+ concepts sharing a non-existing implied parent slug; each
  *                           concept is grouped under its non-existing prefix ancestors up to (but not
  *                           including) its nearest existing ancestor
+ *   self-links              Concept files whose Connected Concepts section links to themselves
  *   all                     Run all checks; output keyed by subcommand name
  */
 
@@ -207,6 +208,34 @@ function missingParentClusters() {
   return { clusters };
 }
 
+function selfLinks() {
+  if (!fs.existsSync(CONCEPTS_DIR)) return {};
+  const result = {};
+  for (const entry of fs.readdirSync(CONCEPTS_DIR, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
+    const slug = entry.name.slice(0, -3);
+    const content = fs.readFileSync(path.join(CONCEPTS_DIR, entry.name), 'utf8');
+    // Only check within ## Connected Concepts — prose/source occurrences are not actionable.
+    const lines = content.split('\n');
+    let inCC = false;
+    let found = false;
+    const selfLinkMarker = `[[Wiki/Concepts/${slug}|`;
+    const selfLinkExact  = `[[Wiki/Concepts/${slug}]]`;
+    for (const line of lines) {
+      if (line === '## Connected Concepts') { inCC = true; continue; }
+      if (inCC && line.startsWith('## ')) break;
+      // Only flag bullet lines — non-list lines are not actionable Connected
+      // Concepts entries and delete-connected-concept would not remove them.
+      if (inCC && /^\s*[-*]\s/.test(line) &&
+          (line.includes(selfLinkMarker) || line.includes(selfLinkExact))) {
+        found = true; break;
+      }
+    }
+    if (found) result[`Wiki/Concepts/${entry.name}`] = {};
+  }
+  return result;
+}
+
 // ── dispatch ──────────────────────────────────────────────────────────────────
 
 const COMMANDS = {
@@ -217,6 +246,7 @@ const COMMANDS = {
   'orphan-summaries': orphanSummaries,
   'thin-concepts': thinConcepts,
   'missing-parent-clusters': missingParentClusters,
+  'self-links': selfLinks,
 };
 
 const subcommand = process.argv[2];
