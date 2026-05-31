@@ -296,8 +296,8 @@ For each summary file and each duplicated concept within it:
 
 1. Read all duplicate lines for that concept.
 2. Derive the concept slug from `conceptPath` (basename without `.md`). Example: `Wiki/Concepts/hong-kong.md` → `hong-kong`.
-3. Extract the display name from any duplicate line (the `|Display Name` part of the wikilink).
-4. Write a single combined description that merges the key facts from all duplicate entries. Example:
+3. Extract the display name from any duplicate line (the `|Display Name` part of the wikilink). If the entries use bare links with no display name, read the concept file title (`# Title` line) and use that as the display name, falling back to the slug in title-case if the file is missing.
+4. Write a single combined description that merges the key facts from all duplicate entries. **Write the description in the same language as the source summary** (most summaries are non-English). Example:
    - Line 1: `- [[Wiki/Concepts/hong-kong|Hong Kong]] — Gray market goods helping both economies`
    - Line 2: `- [[Wiki/Concepts/hong-kong|Hong Kong]] — Disney used it as negotiating leverage`
    - Combined description: `Gray market goods trade channel and Disney's negotiating leverage for mainland market entry`
@@ -305,11 +305,13 @@ For each summary file and each duplicated concept within it:
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs delete-concept "{summary-rel-path}" "{concept-slug}"
    ```
-6. Insert the single combined entry:
+6. Insert the single combined entry via stdin to avoid shell interpolation of `$` signs or backticks that may appear in descriptions:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs insert-concept "{summary-rel-path}" "{concept-slug}" "{display-name}" "{combined-description}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs insert-concept "{summary-rel-path}" "{concept-slug}" "{display-name}" <<'DESCRIPTION'
+   {combined-description}
+   DESCRIPTION
    ```
-   Double-quote all arguments to protect special characters.
+   The single-quoted `'DESCRIPTION'` heredoc delimiter prevents the shell from expanding any special characters in the description body.
 
 ---
 

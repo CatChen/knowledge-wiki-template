@@ -259,18 +259,14 @@ function duplicateConceptLinks() {
       const stripped = line.trimStart().replace(/^[-*]\s+/, '');
       if (!inKeyC || !/^[-*]\s/.test(line.trimStart()) || !stripped.startsWith('[[Wiki/Concepts/')) continue;
 
-      // Count each concept at most once per line to avoid double-counting
-      // a concept that appears twice in a single malformed entry.
-      const seenOnLine = new Set();
-      let match;
+      // Only the leading wikilink is the entry target — secondary links in
+      // descriptions are not concept entries and should not be counted.
       conceptLinkRe.lastIndex = 0;
-      while ((match = conceptLinkRe.exec(line)) !== null) {
-        const conceptPath = `Wiki/Concepts/${match[1]}.md`;
-        if (seenOnLine.has(conceptPath)) continue;
-        seenOnLine.add(conceptPath);
-        if (!conceptLines[conceptPath]) conceptLines[conceptPath] = [];
-        conceptLines[conceptPath].push(line.trim());
-      }
+      const match = conceptLinkRe.exec(stripped);
+      if (!match) continue;
+      const conceptPath = `Wiki/Concepts/${match[1]}.md`;
+      if (!conceptLines[conceptPath]) conceptLines[conceptPath] = [];
+      conceptLines[conceptPath].push(line.trim());
     }
 
     const duplicates = Object.entries(conceptLines)

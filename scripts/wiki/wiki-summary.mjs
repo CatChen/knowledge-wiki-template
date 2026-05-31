@@ -26,9 +26,11 @@
  *       <summary-rel-path>: path relative to the knowledge root, e.g.
  *         Wiki/Summaries/Twitter/Tweets-foo.summary.md
  *
- *   insert-concept <summary-rel-path> <concept-slug> <display-name> <description>
+ *   insert-concept <summary-rel-path> <concept-slug> <display-name> [<description>]
  *       Append "- [[Wiki/Concepts/<slug>|<display-name>]] — <description>" to the
  *       ## Key Concepts section. Idempotent — no-op if the wikilink already exists.
+ *       If <description> is omitted, reads the description from stdin (heredoc-safe,
+ *       avoids shell interpolation of $-signs or backticks in LLM-generated text).
  */
 
 import fs from 'fs';
@@ -37,7 +39,7 @@ import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { extractBody } from './wiki-graph-lib.mjs';
 import {
-  sectionContains,
+  getBulletsFromSection,
   insertBulletInSection,
   deleteBulletFromSection,
 } from './wiki-section-lib.mjs';
@@ -197,7 +199,11 @@ function cmdDeleteConcept(args) {
   const content = fs.readFileSync(summaryFull, 'utf8');
   const { content: updated, found } = deleteBulletFromSection(
     content, 'Key Concepts',
-    line => line.includes(linkWithAlias) || line.includes(linkBare),
+    line => {
+      const stripped = line.trimStart().replace(/^[-*]\s+/, '');
+      return /^[-*]\s/.test(line.trimStart()) &&
+        (stripped.startsWith(linkWithAlias) || stripped.startsWith(linkBare));
+    },
   );
 
   if (!found) {
@@ -210,9 +216,17 @@ function cmdDeleteConcept(args) {
 }
 
 function cmdInsertConcept(args) {
-  const [relPath, slug, displayName, description] = args;
-  if (!relPath || !slug || !displayName || !description) {
-    console.error('Usage: node scripts/wiki/wiki-summary.mjs insert-concept <summary-rel-path> <concept-slug> <display-name> <description>');
+  const [relPath, slug, displayName, descriptionArg] = args;
+  if (!relPath || !slug || !displayName) {
+    console.error('Usage: node scripts/wiki/wiki-summary.mjs insert-concept <summary-rel-path> <concept-slug> <display-name> [<description> | <<heredoc]');
+    process.exit(1);
+  }
+
+  // Accept description as 4th arg or from stdin (heredoc), so shell metacharacters
+  // in LLM-generated text are never interpolated by the shell.
+  const description = descriptionArg ?? fs.readFileSync(0, 'utf8').trim();
+  if (!description) {
+    console.error('insert-concept: description is required (provide as arg or via stdin)');
     process.exit(1);
   }
 
@@ -224,7 +238,16 @@ function cmdInsertConcept(args) {
 
   const content = fs.readFileSync(summaryFull, 'utf8');
 
-  if (sectionContains(content, 'Key Concepts', `[[Wiki/Concepts/${slug}|`)) {
+  // Idempotency: check only canonical bullet entries (not prose mentions) for
+  // both aliased [[...| ]] and bare [[...]] forms.
+  const linkWithAlias = `[[Wiki/Concepts/${slug}|`;
+  const linkBare      = `[[Wiki/Concepts/${slug}]]`;
+  const bullets = getBulletsFromSection(content, 'Key Concepts') ?? [];
+  const alreadyPresent = bullets.some(line => {
+    const stripped = line.trimStart().replace(/^[-*]\s+/, '');
+    return stripped.startsWith(linkWithAlias) || stripped.startsWith(linkBare);
+  });
+  if (alreadyPresent) {
     console.log(`Already present in ${relPath}: ${slug}`);
     return;
   }
