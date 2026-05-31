@@ -20,17 +20,19 @@
  *       (relative to KNOWLEDGE_DIR). Computes and writes the hash automatically.
  *       Prints the summary file rel-path so the skill knows where to edit.
  *
- *   delete-concept <summary-rel-path> <concept-slug>
+ *   delete-concept [--from-json | <summary-rel-path> <concept-slug>]
  *       Remove all bullet lines containing [[Wiki/Concepts/<concept-slug>|...]] or
  *       [[Wiki/Concepts/<concept-slug>]] from the ## Key Concepts section.
+ *       --from-json: read {"relPath","slug"} as JSON from stdin (heredoc-safe).
  *       <summary-rel-path>: path relative to the knowledge root, e.g.
  *         Wiki/Summaries/Twitter/Tweets-foo.summary.md
  *
- *   insert-concept <summary-rel-path> <concept-slug> <display-name> [<description>]
+ *   insert-concept [--from-json | <summary-rel-path> <concept-slug> <display-name> [<description>]]
  *       Append "- [[Wiki/Concepts/<slug>|<display-name>]] — <description>" to the
  *       ## Key Concepts section. Idempotent — no-op if the wikilink already exists.
- *       If <description> is omitted, reads the description from stdin (heredoc-safe,
- *       avoids shell interpolation of $-signs or backticks in LLM-generated text).
+ *       --from-json: read {"relPath","slug","displayName","description"} as JSON from
+ *         stdin (heredoc-safe, avoids shell interpolation of $-signs or backticks).
+ *       If <description> is omitted (positional form), reads description from stdin.
  */
 
 import fs from 'fs';
@@ -43,6 +45,10 @@ import {
   insertBulletInSection,
   deleteBulletFromSection,
 } from './wiki-section-lib.mjs';
+
+function readJsonStdin() {
+  return JSON.parse(fs.readFileSync(0, 'utf8'));
+}
 
 process.stdout.on('error', err => { if (err.code === 'EPIPE') process.exit(0); });
 
@@ -182,9 +188,14 @@ function cmdCreate(args) {
 }
 
 function cmdDeleteConcept(args) {
-  const [relPath, slug] = args;
+  let relPath, slug;
+  if (args[0] === '--from-json') {
+    ({ relPath, slug } = readJsonStdin());
+  } else {
+    [relPath, slug] = args;
+  }
   if (!relPath || !slug) {
-    console.error('Usage: node scripts/wiki/wiki-summary.mjs delete-concept <summary-rel-path> <concept-slug>');
+    console.error('Usage: node scripts/wiki/wiki-summary.mjs delete-concept [--from-json | <summary-rel-path> <concept-slug>]');
     process.exit(1);
   }
 
@@ -216,15 +227,20 @@ function cmdDeleteConcept(args) {
 }
 
 function cmdInsertConcept(args) {
-  const [relPath, slug, displayName, descriptionArg] = args;
+  let relPath, slug, displayName, description;
+  if (args[0] === '--from-json') {
+    // All values come from a JSON heredoc — no shell interpolation of any argument.
+    ({ relPath, slug, displayName, description } = readJsonStdin());
+  } else {
+    const [r, s, d, descArg] = args;
+    [relPath, slug, displayName] = [r, s, d];
+    // Accept description as 4th arg or from stdin (heredoc).
+    description = descArg ?? fs.readFileSync(0, 'utf8').trim();
+  }
   if (!relPath || !slug || !displayName) {
-    console.error('Usage: node scripts/wiki/wiki-summary.mjs insert-concept <summary-rel-path> <concept-slug> <display-name> [<description> | <<heredoc]');
+    console.error('Usage: node scripts/wiki/wiki-summary.mjs insert-concept [--from-json | <summary-rel-path> <concept-slug> <display-name> [<description>]]');
     process.exit(1);
   }
-
-  // Accept description as 4th arg or from stdin (heredoc), so shell metacharacters
-  // in LLM-generated text are never interpolated by the shell.
-  const description = descriptionArg ?? fs.readFileSync(0, 'utf8').trim();
   if (!description) {
     console.error('insert-concept: description is required (provide as arg or via stdin)');
     process.exit(1);

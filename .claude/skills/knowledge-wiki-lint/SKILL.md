@@ -301,17 +301,19 @@ For each summary file and each duplicated concept within it:
    - Line 1: `- [[Wiki/Concepts/hong-kong|Hong Kong]] — Gray market goods helping both economies`
    - Line 2: `- [[Wiki/Concepts/hong-kong|Hong Kong]] — Disney used it as negotiating leverage`
    - Combined description: `Gray market goods trade channel and Disney's negotiating leverage for mainland market entry`
-5. Delete all duplicate entries for that concept:
+5. Delete all duplicate entries for that concept using `--from-json` so the path and slug are never shell-interpolated:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs delete-concept "{summary-rel-path}" "{concept-slug}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs delete-concept --from-json <<'ARGS'
+   {"relPath": "{summary-rel-path}", "slug": "{concept-slug}"}
+   ARGS
    ```
-6. Insert the single combined entry via stdin to avoid shell interpolation of `$` signs or backticks that may appear in descriptions:
+6. Insert the single combined entry using `--from-json` so all values — path, slug, display name, and description — are passed through the shell-safe heredoc body and never expanded by the shell:
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs insert-concept "{summary-rel-path}" "{concept-slug}" "{display-name}" <<'DESCRIPTION'
-   {combined-description}
-   DESCRIPTION
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-summary.mjs insert-concept --from-json <<'ARGS'
+   {"relPath": "{summary-rel-path}", "slug": "{concept-slug}", "displayName": "{display-name}", "description": "{combined-description}"}
+   ARGS
    ```
-   The single-quoted `'DESCRIPTION'` heredoc delimiter prevents the shell from expanding any special characters in the description body.
+   JSON-escape any `"` or `\` inside the values. The single-quoted `'ARGS'` heredoc delimiter prevents the shell from expanding `$`, backticks, or any other special characters in the JSON body.
 
 ---
 
