@@ -1,19 +1,21 @@
 ---
 name: knowledge-wiki-cluster
-description: 'Find groups of concepts that share a non-existing implied parent slug, and interactively create topic overview concepts to cover them. Each concept is grouped under its non-existing prefix ancestors up to its nearest existing ancestor — so apple-watch-ultra still forms an [apple-watch] cluster even when apple.md exists. Run after accumulating new concepts or when the wiki has clusters of narrowly-named sub-topics without a parent.'
+description: 'Find groups of concepts that share a non-existing implied parent slug, create a parent concept, then fold thin or redundant children into it or skip substantial ones (keep as standalone, linked to parent). Net result: fewer total concepts, with the parent article absorbing content from folded children. Run after accumulating new concepts or when the wiki has clusters of narrowly-named sub-concepts without a parent.'
 ---
 
 # Knowledge Wiki Cluster
 
-Detect clusters of concepts that share a non-existing implied parent slug, then interactively create topic overview concepts for them. Each concept is grouped under its non-existing prefix ancestors up to (but not including) its nearest existing ancestor — so `apple-watch-ultra` still forms an `[apple-watch]` cluster even when `apple.md` exists. Presents one cluster at a time — you decide whether to create the parent concept, dismiss (never show again), or skip.
+Detect clusters of concepts that share a non-existing implied parent slug, create a parent topic overview, then decide for each child whether to **fold** (merge content into parent and delete the child) or **skip** (keep the child as a standalone concept linked to the parent). The goal is to reduce total concept count by absorbing thin, redundant, or retired sub-concepts into a parent article.
+
+Each concept is grouped under its non-existing prefix ancestors up to (but not including) its nearest existing ancestor — so `apple-watch-ultra` still forms an `[apple-watch]` cluster even when `apple.md` exists. Presents one cluster at a time — you decide whether to create, dismiss (never show again), or skip.
+
+**Resumability:** Once a parent file is created, the cluster won't surface again on re-run (`missing-parent-clusters` stops at the existing parent). If interrupted, complete any skipped sub-steps manually: write the body if still a skeleton; re-run the `insert-connected-concept` commands (idempotent) for any unlinked children; run `upsert-concept` if the parent is absent from the index. Remaining fold work can be done later via `knowledge-wiki-merge`. Do not re-run the full skill on an existing parent.
 
 ## Steps
 
 ### 1. Establish the working directory
 
 The knowledge base root is the Git repository root. Run `git rev-parse --show-toplevel` and store the result as `KNOWLEDGE_PATH`.
-
-Use `KNOWLEDGE_PATH` for all subsequent steps.
 
 ### 2. Find clusters
 
@@ -23,39 +25,35 @@ Run:
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs missing-parent-clusters
 ```
 
-This outputs `{ "clusters": [...] }` sorted **deepest first** (most hyphens in `impliedParent`), with ties broken by cluster size descending. Each entry has `impliedParent` (the slug that doesn't exist yet) and `children` (array of concept file paths, e.g. `Wiki/Concepts/audi-etron.md`). Previously dismissed clusters are already filtered out. Each concept is grouped under its non-existing prefix ancestors up to (but not including) its nearest existing ancestor — for example, `apple-watch-ultra` appears in `[apple-watch]` even when `apple.md` exists, because `apple-watch` itself is still missing.
+This outputs `{ "clusters": [...] }` sorted **deepest first** (most hyphens in `impliedParent`), with ties broken by cluster size descending. Each entry has `impliedParent` (the slug that doesn't exist yet) and `children` (array of concept file paths, e.g. `Wiki/Concepts/audi-etron.md`). Previously dismissed clusters are already filtered out.
 
-The deepest-first ordering enables bottom-up creation: after creating a deeper concept (e.g. `overwatch-2`), a refresh surfaces it as a new child inside the shallower cluster (e.g. `[overwatch]`).
-
-Derive each child's slug by taking the basename of its path without the `.md` extension (e.g. `Wiki/Concepts/audi-etron.md` → `audi-etron`). Use this derived slug wherever `{child-slug}` appears in subsequent steps.
+Derive each child's slug from its filename: `Wiki/Concepts/audi-etron.md` → `audi-etron`. Use this slug wherever `{child-slug}` appears below.
 
 If the `clusters` array is empty, print `No clusters found.` and stop.
 
 ### 3. LLM pre-filter
 
-Before presenting clusters to the user, review the list and auto-dismiss clusters where the implied parent is a common English modifier rather than a meaningful proper noun or specific topic — e.g. `smart` grouping `smart-home` with `smart-money`, or `the` grouping `the-economist` with `the-expanse`. Children spanning clearly unrelated domains (finance + games, policy + hardware) are a reliable signal for auto-dismissal.
+Before presenting clusters to the user, auto-dismiss clusters where the implied parent is a common English modifier rather than a meaningful proper noun or specific topic — e.g. `smart` grouping `smart-home` with `smart-money`, or `the` grouping `the-economist` with `the-expanse`. Children spanning clearly unrelated domains are a reliable signal for auto-dismissal.
 
-For each auto-dismissed cluster, call:
+For each auto-dismissed cluster:
 
 ```bash
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs dismiss-cluster-parent "{impliedParent}"
 ```
 
-Be conservative: dismiss only clusters you are confident are meaningless. A wrongly dismissed cluster is hidden from all future runs and requires manually editing `Wiki/.state.json` to recover.
+Be conservative — a wrongly dismissed cluster requires manually editing `Wiki/.state.json` to recover.
 
 ### 4. Present and resolve each cluster
 
-Process one cluster at a time. Use a **separate interaction for each cluster** — never combine multiple clusters into a single question, even if you intend to recommend the same action for several in a row.
+Process one cluster at a time. Use a **separate interaction for each cluster** — never combine multiple clusters into a single question.
 
-Maintain an **in-memory processed set** of `impliedParent` slugs that have been Created, Dismissed, or Skipped in this session. When the cluster list is refreshed after a Create, exclude any cluster whose `impliedParent` is already in this set before continuing.
-
-For each remaining cluster, work through the following sub-steps in order.
+Maintain an **in-memory processed set** of `impliedParent` slugs handled in this session. After a Create, exclude already-processed slugs from the refreshed cluster list.
 
 ---
 
-#### 4a. Read and summarize the cluster
+#### 4a. Read and summarize
 
-Read all child concept files. Present a brief summary:
+Read every child concept file. Present a brief summary:
 
 ```
 ─────────────────────────────────────
@@ -69,77 +67,87 @@ Cluster: [{impliedParent}]  ({N} children)
 
 Derive a human-readable **Display Name** for the implied parent (e.g. `audi` → `Audi`, `apple-watch` → `Apple Watch`, `career` → `Career`).
 
-Then write 1–2 sentences of reasoning visible to the user: explain what the children have in common, whether a parent concept would add meaningful value, and state your recommendation. Examples:
-- *"All 6 children describe distinct Apple products and services — a parent concept would serve as a useful index linking them. Creating recommended."*
-- *"Both children cover dream-related topics but are thin standalone concepts; it's unclear whether a* `Dream` *parent would add value beyond what the two articles already provide."*
+Then write 1–2 sentences of reasoning: what the children have in common, whether a parent would add meaningful value, and your recommendation.
 
 #### 4b. Ask what to do
 
-Before asking, assess whether creating the parent concept is strongly warranted. A cluster is **strongly recommended** when the implied parent is a clear brand, product line, or named topic, and has 3 or more children that obviously belong under it. A cluster is **not strongly recommended** when it has only 2 children, or when the children's connection feels tenuous after reading them.
-
-**Never add "(Recommended)" to Dismiss or Skip** — not in the label, not anywhere. These options are always neutral.
-
-**If the cluster is strongly recommended**, put `(Recommended)` in the Create label:
+A cluster is **strongly recommended** when the implied parent is a clear brand, product line, or named topic with 3+ children that obviously belong under it; otherwise it is **not strongly recommended**. Add `(Recommended)` to the Create label only when strongly recommended. **Never** put `(Recommended)` on Dismiss or Skip.
 
 | # | Option | Description |
 |---|--------|-------------|
-| 1 | `Create "{Display Name}" (Recommended)` | Create a new topic overview concept and link all children to it |
+| 1 | `Create "{Display Name}"` | Create the parent concept and decide what to do with each child |
 | 2 | `Dismiss` | These don't belong together; never show this cluster again |
 | 3 | `Skip` | Leave for now; show again next run |
 
-**If the cluster is not strongly recommended**, omit `(Recommended)`:
-
-| # | Option | Description |
-|---|--------|-------------|
-| 1 | `Create "{Display Name}"` | Create a new topic overview concept and link all children to it |
-| 2 | `Dismiss` | These don't belong together; never show this cluster again |
-| 3 | `Skip` | Leave for now; show again next run |
-
-**If `AskUserQuestion` is available**, invoke it with these three options. **If unavailable** (e.g. Codex), print them as a numbered list and ask the user to reply with 1, 2, or 3 (or "stop" to halt all remaining clusters). Wait for a reply before proceeding.
-
-Users may type "stop" in the Other field (or reply "stop") to halt processing of remaining clusters.
+**If `AskUserQuestion` is available**, invoke it with these options. **If unavailable**, print as a numbered list; accept `1`, `2`, `3`, or `stop` (halt all remaining clusters). Users may also type "stop" in the Other field.
 
 ---
 
 #### 4c. If Create was selected
 
-1. **Create the concept file:**
+**Create the parent concept file:**
 
-   ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs create "{impliedParent}" "{Display Name}"
-   ```
+```bash
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs create "{impliedParent}" "{Display Name}"
+```
 
-   This creates `Wiki/Concepts/{impliedParent}.md`. The command prints the file path.
+This creates `Wiki/Concepts/{impliedParent}.md`.
 
-2. **Write the article body:** Read the file, then edit it to insert a 1–3 paragraph topic overview between `# {Display Name}` and `## Sources`. Write it as a factual reference — what this brand, product line, or topic is, and what the sub-concepts cover. This is a topic index, not an analytical synthesis; keep it factual and concise. Use American English spelling. For `tags: []`, draw on the union of tags already present across the child concept files as a starting point — keep only those that genuinely describe the parent topic itself, not tags that are specific to one child's narrow scope.
+**Write the initial parent article body:**
 
-3. **Link children as Connected Concepts** (idempotent):
+Read the file, then insert a 1–3 paragraph topic overview between `# {Display Name}` and `## Sources`. Write it as a factual reference — what this topic is and what sub-concepts exist under it. Keep it concise; each Fold will enrich the body incrementally. Use American English spelling. Update the existing `tags: []` field with the union of tags from the child files, keeping only those that genuinely describe the parent topic.
 
-   For each child concept, derive its display name from the `# Title` line of its concept file. Then run:
-   ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{impliedParent}" "{child-slug}" "{child display name from # Title}"
-   ```
+**Link all children bidirectionally (idempotent):**
 
-4. **Back-link children to the new parent** (idempotent):
+For each child, derive its display name from its H1 heading (`# …`). Run both commands — the first adds the child to the parent's Connected Concepts, the second adds the parent to the child's:
 
-   For each child concept, run:
-   ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{child-slug}" "{impliedParent}" "{Display Name}"
-   ```
+```bash
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{impliedParent}" "{child-slug}" "{child-display-name}"
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{child-slug}" "{impliedParent}" "{Display Name}"
+```
 
-5. **Update the index:**
+Once complete for all children, every child is linked to the parent regardless of subsequent fold/skip decisions.
 
-   ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-concept "{impliedParent}" "{Display Name}" "{one-line English description}"
-   ```
+**Update the index:**
 
-6. **Update processed set and refresh the cluster list:** Add `{impliedParent}` to the in-memory processed set. The newly created concept file may now appear as a child inside a shallower cluster (e.g. creating `overwatch-2` makes it a child of `[overwatch]`). Re-run:
+```bash
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-concept "{impliedParent}" "{Display Name}" "{one-line English description}"
+```
 
-   ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs missing-parent-clusters
-   ```
+**For each child, decide: Fold or Skip**
 
-   Replace your working cluster list with this fresh output, then remove any cluster whose `impliedParent` is already in the in-memory processed set before continuing. Skip this refresh after Dismiss or Skip — no files changed, so the list is still valid.
+Process one child at a time. Write 1–2 sentences of reasoning. Recommend **Fold** for:
+- Thin concepts (short prose, few sources) whose content would naturally be a section of the parent
+- Narrow sub-topics more useful as context within the parent than as standalone articles
+- Concepts that add little value when found independently
+
+Recommend **Skip** for:
+- Substantive articles with rich prose and multiple sources
+- Cross-cutting concepts linked from many other concepts
+- Topics genuinely distinct and useful to find independently
+
+**If `AskUserQuestion` is available**, ask with these options (add `(Recommended)` to whichever applies):
+
+| # | Option | Description |
+|---|--------|-------------|
+| 1 | `Fold "{child-display-name}" into "{Display Name}"` | Merge child's content into parent, then delete child |
+| 2 | `Skip "{child-display-name}"` | Keep child standalone; already linked to parent |
+
+**If `AskUserQuestion` is unavailable**, print as a numbered list. Accept: `1` (Fold), `2` (Skip), `done` (finish this cluster's children and proceed to wrap-up — unprocessed children are already linked and will not be folded), or `stop` (halt all remaining clusters).
+
+**If Fold was chosen**, execute following `knowledge-wiki-merge` step 3c with this mapping:
+- **primary** = parent: slug `{impliedParent}`, display name `{Display Name}`, path `Wiki/Concepts/{impliedParent}.md`
+- **secondary** = child: slug `{child-slug}`, display name `{child-display-name}`, path `Wiki/Concepts/{child-slug}.md`
+
+**Wrap up:**
+
+This runs whether or not all children were processed. Add `{impliedParent}` to the in-memory processed set. Re-run:
+
+```bash
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs missing-parent-clusters
+```
+
+Replace your working cluster list with this fresh output, excluding any slug already in the processed set.
 
 ---
 
@@ -149,15 +157,15 @@ Users may type "stop" in the Other field (or reply "stop") to halt processing of
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs dismiss-cluster-parent "{impliedParent}"
 ```
 
-Add `{impliedParent}` to the in-memory processed set. Continue to the next cluster.
+Add `{impliedParent}` to the processed set and continue. (No refresh needed — no concept files were created.)
 
 #### 4e. If Skip was selected
 
-Add `{impliedParent}` to the in-memory processed set. Continue to the next cluster without recording anything.
+Add `{impliedParent}` to the processed set and continue. (No refresh needed — no concept files were created.)
 
 #### 4f. If "stop"
 
-Exit the loop immediately. Proceed to step 5.
+Exit the loop and proceed to step 5.
 
 ---
 
@@ -170,7 +178,9 @@ Auto-dismissed {N} cluster(s) (meaningless prefix):
   - [{impliedParent}]
 
 Created {N} concept(s):
-  - {impliedParent} — {Display Name}  ({N} children linked)
+  - {impliedParent} — {Display Name}
+      Folded {Nf} child(ren): {child-slug}, {child-slug}, ...
+      Not folded {Nn} child(ren): {child-slug}, {child-slug}, ...
 
 Dismissed {N} cluster(s):
   - [{impliedParent}]
