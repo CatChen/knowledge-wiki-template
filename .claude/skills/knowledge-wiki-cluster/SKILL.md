@@ -9,7 +9,7 @@ Detect clusters of concepts that share a non-existing implied parent slug, creat
 
 Each concept is grouped under its non-existing prefix ancestors up to (but not including) its nearest existing ancestor — so `apple-watch-ultra` still forms an `[apple-watch]` cluster even when `apple.md` exists. Presents one cluster at a time — you decide whether to create, dismiss (never show again), or skip.
 
-**Resumability:** Once a parent file is created, the cluster won't surface again on re-run (`missing-parent-clusters` stops at the existing parent). If interrupted, complete any skipped sub-steps manually: write the body if still a skeleton; re-run the `insert-connected-concept` commands (idempotent) for any unlinked children; run `upsert-concept` if the parent is absent from the index. Remaining fold work can be done later via `knowledge-wiki-merge`. Do not re-run the full skill on an existing parent.
+**Resumability:** All Fold/Skip decisions are collected before any files are created or modified. An interruption during the Q&A phase leaves no partial state — simply re-run and the same cluster surfaces again. If interrupted during the batch write phase (after all decisions are collected), the parent file may already exist, which prevents the cluster from surfacing again. In that case, complete the remaining sub-steps manually: write the body if still a skeleton; re-run the `insert-connected-concept` commands (idempotent) for any unlinked children; run `upsert-concept` if the parent is absent from the index. Remaining fold work can be done later via `knowledge-wiki-merge`. Do not re-run the full skill on an existing parent.
 
 ## Steps
 
@@ -85,7 +85,30 @@ A cluster is **strongly recommended** when the implied parent is a clear brand, 
 
 #### 4c. If Create was selected
 
-**Create the parent concept file:**
+**Collect Fold/Skip decisions for all children before creating any files.**
+
+Process one child at a time. Write 1–2 sentences of reasoning. Recommend **Fold** for:
+- Thin concepts (short prose, few sources) whose content would naturally be a section of the parent
+- Narrow sub-topics more useful as context within the parent than as standalone articles
+- Concepts that add little value when found independently
+
+Recommend **Skip** for:
+- Substantive articles with rich prose and multiple sources
+- Cross-cutting concepts linked from many other concepts
+- Topics genuinely distinct and useful to find independently
+
+**If `AskUserQuestion` is available**, ask with these options (add `(Recommended)` to whichever applies):
+
+| # | Option | Description |
+|---|--------|-------------|
+| 1 | `Fold "{child-display-name}" into "{Display Name}"` | Merge child's content into parent, then delete child |
+| 2 | `Skip "{child-display-name}"` | Keep child standalone; will be linked to parent |
+
+**If `AskUserQuestion` is unavailable**, print as a numbered list. Accept: `1` (Fold), `2` (Skip), `done` (stop asking and proceed with decisions collected so far — unprocessed children will be treated as Skip), or `stop` (halt all remaining clusters).
+
+Record each decision in memory. Do not create or edit any files until all children have been decided (or `done`/`stop` was entered).
+
+**After collecting all decisions, create and populate the parent concept:**
 
 ```bash
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs create "{impliedParent}" "{Display Name}"
@@ -106,7 +129,7 @@ node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{i
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{child-slug}" "{impliedParent}" "{Display Name}"
 ```
 
-Once complete for all children, every child is linked to the parent regardless of subsequent fold/skip decisions.
+Run this for every child regardless of fold/skip decision.
 
 **Update the index:**
 
@@ -114,28 +137,9 @@ Once complete for all children, every child is linked to the parent regardless o
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-concept "{impliedParent}" "{Display Name}" "{one-line English description}"
 ```
 
-**For each child, decide: Fold or Skip**
+**Execute folds:**
 
-Process one child at a time. Write 1–2 sentences of reasoning. Recommend **Fold** for:
-- Thin concepts (short prose, few sources) whose content would naturally be a section of the parent
-- Narrow sub-topics more useful as context within the parent than as standalone articles
-- Concepts that add little value when found independently
-
-Recommend **Skip** for:
-- Substantive articles with rich prose and multiple sources
-- Cross-cutting concepts linked from many other concepts
-- Topics genuinely distinct and useful to find independently
-
-**If `AskUserQuestion` is available**, ask with these options (add `(Recommended)` to whichever applies):
-
-| # | Option | Description |
-|---|--------|-------------|
-| 1 | `Fold "{child-display-name}" into "{Display Name}"` | Merge child's content into parent, then delete child |
-| 2 | `Skip "{child-display-name}"` | Keep child standalone; already linked to parent |
-
-**If `AskUserQuestion` is unavailable**, print as a numbered list. Accept: `1` (Fold), `2` (Skip), `done` (finish this cluster's children and proceed to wrap-up — unprocessed children are already linked and will not be folded), or `stop` (halt all remaining clusters).
-
-**If Fold was chosen**, execute following `knowledge-wiki-merge` step 3c with this mapping:
+For each child where Fold was chosen, execute the `knowledge-wiki-merge` step 3c with this mapping:
 - **primary** = parent: slug `{impliedParent}`, display name `{Display Name}`, path `Wiki/Concepts/{impliedParent}.md`
 - **secondary** = child: slug `{child-slug}`, display name `{child-display-name}`, path `Wiki/Concepts/{child-slug}.md`
 
