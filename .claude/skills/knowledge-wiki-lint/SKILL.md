@@ -324,51 +324,25 @@ For each summary file and each duplicated concept within it:
 
 ### 17. Print summary
 
-```
-Knowledge Wiki Lint
+Print the header, then a markdown table (not in a code block) with one row per check. Output the table so it renders:
 
-Check 1 · Orphan Summaries
-  Deleted {N} orphan summary file(s):
-    - {Display Name} (source: {source})
-  [or: No orphan summaries found.]
+---
+**Knowledge Wiki Lint**
 
-Check 2 · Broken Summary → Concept Links
-  Created {N} missing concept file(s): {Display Name}, ...
-  [or: No broken summary → concept links found.]
+| Check | Result | Details |
+|-------|--------|---------|
+| 1 · Orphan Summaries | Deleted {N} \| None | {comma-separated Display Names, or omit cell if none} |
+| 2 · Broken Summary → Concept Links | Created {N} \| None | {comma-separated Display Names, or omit cell if none} |
+| 3 · Broken Concept → * Links | Removed {N} \| None | {M} concept file(s) affected, or omit cell if none |
+| 4 · Orphan Concepts | Deleted {N} \| None | {comma-separated Display Names, or omit cell if none} |
+| 5 · Dead Index Links | Removed {N} \| None | {M} concept(s), {K} summary(s), or omit cell if none |
+| 6 · Missing Summary Index Entries | Added {N} \| None |  |
+| 7 · Missing Concept Index Entries | Added {N} \| None |  |
+| 8 · Stale Dismissed Merge Pairs | Pruned {N} \| None |  |
+| 9 · Stale Dismissed Cluster Parents | Pruned {N} \| None |  |
+| 10 · Self-Links in Connected Concepts | Removed {N} \| None | {M} concept file(s) affected, or omit cell if none |
+| 11 · Duplicate Concept Links in Summaries | Consolidated {N} \| None | across {M} summary file(s), or omit cell if none |
 
-Check 3 · Broken Concept → * Links
-  Removed {N} dead bullet point(s) from {M} concept file(s).
-  [or: No broken concept links found.]
+---
 
-Check 4 · Orphan Concepts
-  Deleted {N} orphan concept file(s): {Display Name}, ...
-  [or: No orphan concepts found.]
-
-Check 5 · Dead Index Links
-  Removed {N} dead link(s) from Wiki/index.md ({M} concept(s), {K} summary(s)).
-  [or: No dead index links found.]
-
-Check 6 · Missing Summary Index Entries
-  Added {N} missing summary entr(y/ies) to Wiki/index.md.
-  [or: No summary index entries missing.]
-
-Check 7 · Missing Concept Index Entries
-  Added {N} missing concept entr(y/ies) to Wiki/index.md.
-  [or: No concept index entries missing.]
-
-Check 8 · Stale Dismissed Merge Pairs
-  Pruned {N} stale pair(s).
-  [or: No stale dismissed pairs.]
-
-Check 9 · Stale Dismissed Cluster Parents
-  Pruned {N} stale cluster parent(s).
-  [or: No stale dismissed cluster parents.]
-
-Check 10 · Self-Links in Connected Concepts
-  Removed {N} self-link(s) from {M} concept file(s).
-  [or: No self-links found.]
-
-Check 11 · Duplicate Concept Links in Summaries
-  Consolidated {N} duplicate concept link(s) across {M} summary file(s).
-  [or: No duplicate concept links found.]
-```
+Use `None` in the Result column when a check found nothing to fix. Omit the Details cell content (leave the cell empty) when there are no meaningful details beyond what the Result column already conveys.

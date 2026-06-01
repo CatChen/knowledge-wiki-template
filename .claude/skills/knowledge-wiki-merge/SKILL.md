@@ -39,7 +39,7 @@ where `pathA` and `pathB` are the full relative paths (e.g. `Wiki/Concepts/apple
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs read-concepts
 ```
 
-This outputs all concept entries with their one-line descriptions. Use your judgment to identify semantically overlapping pairs from this list. Tag each as `detection: "semantic"`. Pairs found by both methods are tagged `detection: "both"`. Skip the LLM pre-filter for semantic candidates — they were already identified by LLM judgment.
+This outputs all concept entries with their one-line descriptions. Use your judgment to identify semantically overlapping pairs from this list. Tag each as `detection: "semantic"`. Pairs found by both structural and semantic methods are tagged `detection: "structural+semantic"`. Skip the LLM pre-filter for semantic candidates — they were already identified by LLM judgment.
 
 If no candidates remain, print `No duplicate candidates found.` and stop.
 
@@ -53,17 +53,17 @@ For each remaining candidate pair, work through the following sub-steps in order
 
 #### 3a. Summarize the pair
 
-Read both concept files. Present a brief summary:
+Read both concept files. Present a brief summary as a markdown table (not in a code block) so it renders:
 
-```
-─────────────────────────────────────
-Candidate: {Display Name A} vs {Display Name B}
-Shared sources: {N}   Detection: {structural | semantic | both}
+---
+**Candidate pair** (shared sources: {N}, detection: {structural | specificity | semantic | structural+semantic})
 
-{Display Name A} — {one-sentence description}
-{Display Name B} — {one-sentence description}
-─────────────────────────────────────
-```
+| Concept | Description |
+|---------|-------------|
+| **{Display Name A}** | {one-sentence description} |
+| **{Display Name B}** | {one-sentence description} |
+
+---
 
 #### 3b. Determine recommended direction and ask what to do
 
