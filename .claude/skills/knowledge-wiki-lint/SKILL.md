@@ -236,19 +236,19 @@ Output is a single integer: the number of pairs pruned. If `0`, print `Check 8: 
 
 ---
 
-## Check 9 — Stale Dismissed Cluster Parents
+## Check 9 — Stale Dismissed Cluster Pairs
 
-_Removes entries from the cluster dismissal list in `Wiki/.state.json` whose concept files now exist on disk._
+_Removes entries from the cluster dismissal list in `Wiki/.state.json` where the child concept file no longer exists on disk. Parent absence is allowed — a pair may have been recorded before the parent was created._
 
-### 13. Prune stale dismissed cluster parents
+### 13. Prune stale dismissed cluster pairs
 
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs prune-cluster-parents
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs prune-cluster-pairs
 ```
 
-Output is a single integer: the number of entries pruned. If `0`, print `Check 9: no stale dismissed cluster parents.`
+Output is a single integer: the number of entries pruned. If `0`, print `Check 9: no stale dismissed cluster pairs.`
 
 ---
 
@@ -339,7 +339,7 @@ Print the header, then a markdown table (not in a code block) with one row per c
 | 6 · Missing Summary Index Entries | Added {N} \| None |  |
 | 7 · Missing Concept Index Entries | Added {N} \| None |  |
 | 8 · Stale Dismissed Merge Pairs | Pruned {N} \| None |  |
-| 9 · Stale Dismissed Cluster Parents | Pruned {N} \| None |  |
+| 9 · Stale Dismissed Cluster Pairs | Pruned {N} \| None |  |
 | 10 · Self-Links in Connected Concepts | Removed {N} \| None | {M} concept file(s) affected, or omit cell if none |
 | 11 · Duplicate Concept Links in Summaries | Consolidated {N} \| None | across {M} summary file(s), or omit cell if none |
 

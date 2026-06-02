@@ -7,12 +7,14 @@
  * Usage:
  *   node scripts/wiki/wiki-state.mjs find-unprocessed-summaries <skill-name>
  *   node scripts/wiki/wiki-state.mjs set-last-run <skill-name>
- *   node scripts/wiki/wiki-state.mjs dismiss-merge-pair <pathA> <pathB>
+ *   node scripts/wiki/wiki-state.mjs dismiss-pair <skill-name> <pathA> <pathB>
  *   node scripts/wiki/wiki-state.mjs prune-merge-pairs
- *   node scripts/wiki/wiki-state.mjs dismiss-cluster-parent <implied-parent>
- *   node scripts/wiki/wiki-state.mjs prune-cluster-parents
+ *   node scripts/wiki/wiki-state.mjs prune-cluster-pairs
  *
- * <skill-name> — the skill identifier, e.g. "knowledge-wiki-concept"
+ * <skill-name> — the skill identifier. find-unprocessed-summaries and set-last-run
+ *   accept LAST_RUN_SKILLS ("knowledge-wiki-concept", "knowledge-wiki-synthesis").
+ *   dismiss-pair accepts DISMISSED_PAIRS_SKILLS ("knowledge-wiki-merge",
+ *   "knowledge-wiki-cluster").
  * <pathA/pathB> — relative concept file paths, e.g. "Wiki/Concepts/foo.md"
  *
  * find-unprocessed-summaries prints a JSON array of summary file paths (relative
@@ -21,16 +23,17 @@
  *   timestamp), all summary files are returned. Summary files with no
  *   summarized_at frontmatter field are always included.
  * set-last-run writes the current ISO timestamp and prints it.
- * dismiss-merge-pair adds a concept pair to the dismissed list so it is never
- *   shown again by knowledge-wiki-merge. Passing the paths in either order
- *   produces the same result.
- * prune-merge-pairs removes dismissed pairs where at least one concept file no
- *   longer exists. Prints the count of removed pairs.
- * dismiss-cluster-parent adds an implied-parent slug to the dismissed list so it is
- *   never shown again by knowledge-wiki-cluster.
- * prune-cluster-parents removes dismissed parent slugs whose concept file now
- *   exists on disk (cluster was resolved), or whose descendant concepts ({slug}-*.md)
- *   are all gone. Prints the count of removed entries.
+ * dismiss-pair adds a concept pair to the skill's dismissed list so it is never
+ *   shown again. The <skill-name> key is created automatically in .state.json
+ *   if it does not exist yet (e.g. "knowledge-wiki-merge",
+ *   "knowledge-wiki-cluster"). Passing the paths in either order produces the
+ *   same result.
+ * prune-merge-pairs removes knowledge-wiki-merge dismissed pairs where at least
+ *   one concept file no longer exists. Prints the count of removed pairs.
+ * prune-cluster-pairs removes knowledge-wiki-cluster dismissed pairs where the
+ *   child concept file no longer exists. The child is identified by slug prefix
+ *   relationship, not sort order. Parent absence is legitimate (pair may have
+ *   been recorded before the parent was created). Prints the count of removed pairs.
  */
 
 import fs from 'fs';
@@ -41,10 +44,22 @@ const KNOWLEDGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 const WIKI_SUMMARIES_DIR = path.join(KNOWLEDGE_DIR, 'Wiki', 'Summaries');
 const STATE_FILE = path.join(KNOWLEDGE_DIR, 'Wiki', '.state.json');
 
+// Skills that use last_run_at tracking and unprocessed-summary detection.
+const LAST_RUN_SKILLS = new Set([
+  'knowledge-wiki-concept',
+  'knowledge-wiki-synthesis',
+]);
+
+// Skills that maintain a dismissedPairs list; the only ones valid for dismiss-pair.
+const DISMISSED_PAIRS_SKILLS = new Set([
+  'knowledge-wiki-merge',
+  'knowledge-wiki-cluster',
+]);
+
 const [subcommand, ...args] = process.argv.slice(2);
 
 if (!subcommand) {
-  console.error('Usage: node scripts/wiki/wiki-state.mjs <find-unprocessed-summaries|set-last-run|dismiss-merge-pair|prune-merge-pairs|dismiss-cluster-parent|prune-cluster-parents> [args]');
+  console.error('Usage: node scripts/wiki/wiki-state.mjs <find-unprocessed-summaries|set-last-run|dismiss-pair|prune-merge-pairs|prune-cluster-pairs> [args]');
   process.exit(1);
 }
 
@@ -61,6 +76,10 @@ if (subcommand === 'find-unprocessed-summaries') {
   const [skillName] = args;
   if (!skillName) {
     console.error('Usage: node scripts/wiki/wiki-state.mjs find-unprocessed-summaries <skill-name>');
+    process.exit(1);
+  }
+  if (!LAST_RUN_SKILLS.has(skillName)) {
+    console.error(`Unknown skill: ${skillName}. Allowed: ${[...LAST_RUN_SKILLS].join(', ')}`);
     process.exit(1);
   }
 
@@ -113,24 +132,32 @@ if (subcommand === 'find-unprocessed-summaries') {
     console.error('Usage: node scripts/wiki/wiki-state.mjs set-last-run <skill-name>');
     process.exit(1);
   }
+  if (!LAST_RUN_SKILLS.has(skillName)) {
+    console.error(`Unknown skill: ${skillName}. Allowed: ${[...LAST_RUN_SKILLS].join(', ')}`);
+    process.exit(1);
+  }
   if (!state[skillName]) state[skillName] = {};
   state[skillName].last_run_at = new Date().toISOString();
   saveState();
   console.log(state[skillName].last_run_at);
 
-} else if (subcommand === 'dismiss-merge-pair') {
-  const [pathA, pathB] = args;
-  if (!pathA || !pathB) {
-    console.error('Usage: node scripts/wiki/wiki-state.mjs dismiss-merge-pair <pathA> <pathB>');
+} else if (subcommand === 'dismiss-pair') {
+  const [skillName, pathA, pathB] = args;
+  if (!skillName || !pathA || !pathB) {
+    console.error('Usage: node scripts/wiki/wiki-state.mjs dismiss-pair <skill-name> <pathA> <pathB>');
+    process.exit(1);
+  }
+  if (!DISMISSED_PAIRS_SKILLS.has(skillName)) {
+    console.error(`Unknown skill: ${skillName}. Allowed: ${[...DISMISSED_PAIRS_SKILLS].join(', ')}`);
     process.exit(1);
   }
   const normalizedPair = [pathA, pathB].sort();
   const pairKey = normalizedPair.join('|');
 
-  if (!state['knowledge-wiki-merge']) state['knowledge-wiki-merge'] = {};
-  if (!state['knowledge-wiki-merge'].dismissedPairs) state['knowledge-wiki-merge'].dismissedPairs = [];
+  if (!state[skillName]) state[skillName] = {};
+  if (!state[skillName].dismissedPairs) state[skillName].dismissedPairs = [];
 
-  const existing = state['knowledge-wiki-merge'].dismissedPairs;
+  const existing = state[skillName].dismissedPairs;
   const alreadyDismissed = existing.some(([a, b]) => [a, b].sort().join('|') === pairKey);
 
   if (!alreadyDismissed) {
@@ -161,47 +188,35 @@ if (subcommand === 'find-unprocessed-summaries') {
   }
   console.log(removedCount);
 
-} else if (subcommand === 'dismiss-cluster-parent') {
-  const [impliedParent] = args.map(a => a.trim());
-  if (!impliedParent) {
-    console.error('Usage: node scripts/wiki/wiki-state.mjs dismiss-cluster-parent <implied-parent>');
-    process.exit(1);
-  }
-
-  if (!state['knowledge-wiki-cluster']) state['knowledge-wiki-cluster'] = {};
-  if (!state['knowledge-wiki-cluster'].dismissedParents) state['knowledge-wiki-cluster'].dismissedParents = [];
-
-  const dismissed = state['knowledge-wiki-cluster'].dismissedParents;
-  if (!dismissed.includes(impliedParent)) {
-    dismissed.push(impliedParent);
-    saveState();
-    console.log(`Dismissed cluster: ${impliedParent}`);
-  } else {
-    console.log(`Already dismissed: ${impliedParent}`);
-  }
-
-} else if (subcommand === 'prune-cluster-parents') {
-  const parents = state?.['knowledge-wiki-cluster']?.dismissedParents ?? [];
+} else if (subcommand === 'prune-cluster-pairs') {
+  const pairs = state?.['knowledge-wiki-cluster']?.dismissedPairs ?? [];
   const kept = [];
   let removedCount = 0;
 
-  const conceptsDir = path.join(KNOWLEDGE_DIR, 'Wiki', 'Concepts');
-  const allConcepts = fs.existsSync(conceptsDir)
-    ? new Set(fs.readdirSync(conceptsDir).filter(f => f.endsWith('.md')))
-    : new Set();
-
-  for (const slug of parents) {
-    const parentFileExists = allConcepts.has(`${slug}.md`);
-    const hasDescendants = [...allConcepts].some(f => f.startsWith(`${slug}-`) && f.endsWith('.md'));
-    if (parentFileExists || !hasDescendants) {
+  for (const pair of pairs) {
+    const [pathA, pathB] = pair;
+    const slugA = path.basename(pathA, '.md');
+    const slugB = path.basename(pathB, '.md');
+    let childPath;
+    if (slugA.startsWith(slugB + '-')) {
+      childPath = pathA;
+    } else if (slugB.startsWith(slugA + '-')) {
+      childPath = pathB;
+    } else {
+      kept.push(pair);
+      continue;
+    }
+    const childExists = fs.existsSync(path.join(KNOWLEDGE_DIR, childPath));
+    if (!childExists) {
       removedCount++;
     } else {
-      kept.push(slug);
+      kept.push(pair);
     }
   }
 
   if (removedCount > 0) {
-    state['knowledge-wiki-cluster'].dismissedParents = kept;
+    if (!state['knowledge-wiki-cluster']) state['knowledge-wiki-cluster'] = {};
+    state['knowledge-wiki-cluster'].dismissedPairs = kept;
     saveState();
   }
   console.log(removedCount);
