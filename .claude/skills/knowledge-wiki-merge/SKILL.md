@@ -28,7 +28,7 @@ This script automatically filters out previously dismissed pairs from `Wiki/.sta
 **LLM pre-filter (structural only):** Before proceeding, review the structural candidates and eliminate any pair that is clearly about different topics despite sharing sources — pairs where the shared sources happen to cover two unrelated ideas (e.g. `applescript` and `email-marketing` appearing in the same AppleScript email tutorial). For each eliminated pair, call:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs dismiss-merge-pair {pathA} {pathB}
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs dismiss-pair knowledge-wiki-merge {pathA} {pathB}
 ```
 
 where `pathA` and `pathB` are the full relative paths (e.g. `Wiki/Concepts/applescript.md`). Be conservative: only dismiss pairs you are confident are unrelated. A wrongly auto-dismissed pair is hidden from all future runs and requires manually editing `Wiki/.state.json` to recover.
@@ -56,7 +56,7 @@ For each remaining candidate pair, work through the following sub-steps in order
 Read both concept files. Present a brief summary as a markdown table (not in a code block) so it renders:
 
 ---
-**Candidate pair** (shared sources: {N}, detection: {structural | specificity | semantic | structural+semantic})
+**Candidate pair** (shared sources: {N}, detection: {structural | semantic | structural+semantic})
 
 | Concept | Description |
 |---------|-------------|
@@ -159,7 +159,7 @@ Then execute:
 Call:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs dismiss-merge-pair {pathA} {pathB}
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs dismiss-pair knowledge-wiki-merge {pathA} {pathB}
 ```
 
 Continue to the next candidate.

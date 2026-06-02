@@ -13,9 +13,10 @@
  *   orphan-concepts         Concept files with no inbound wikilinks
  *   orphan-summaries        Summary files whose source document no longer exists
  *   thin-concepts           Concept files below word/source thresholds (expansion candidates)
- *   missing-parent-clusters Groups of 2+ concepts sharing a non-existing implied parent slug; each
- *                           concept is grouped under its non-existing prefix ancestors up to (but not
- *                           including) its nearest existing ancestor
+ *   missing-parent-clusters Clusters of concepts sharing an implied parent slug. New-parent clusters
+ *                           have 2+ non-dismissed children and no existing parent concept;
+ *                           existing-parent clusters have 1+ non-dismissed children under an existing
+ *                           parent. Each entry: { impliedParent, children, parentExists }
  *   self-links              Concept files whose Connected Concepts section links to themselves
  *   duplicate-concept-links Summary files whose Key Concepts section links to the same concept more than once
  *   all                     Run all checks; output keyed by subcommand name
@@ -84,6 +85,7 @@ function duplicateConcepts() {
     : {};
   const dismissedSet = new Set(
     (state['knowledge-wiki-merge']?.dismissedPairs ?? [])
+      .filter(e => Array.isArray(e) && e.length === 2)
       .map(([a, b]) => [a, b].sort().join('|'))
   );
   function isDismissed(a, b) {
@@ -167,9 +169,15 @@ function missingParentClusters() {
   const state = fs.existsSync(STATE_FILE)
     ? JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
     : {};
-  const dismissedSet = new Set(
-    state['knowledge-wiki-cluster']?.dismissedParents ?? []
+
+  const dismissedClusterPairSet = new Set(
+    (state['knowledge-wiki-cluster']?.dismissedPairs ?? [])
+      .map(([a, b]) => [a, b].sort().join('|'))
   );
+  function isPairDismissed(parentSlug, childSlug) {
+    const key = [`Wiki/Concepts/${parentSlug}.md`, `Wiki/Concepts/${childSlug}.md`].sort().join('|');
+    return dismissedClusterPairSet.has(key);
+  }
 
   if (!fs.existsSync(CONCEPTS_DIR)) return { clusters: [] };
 
@@ -181,30 +189,44 @@ function missingParentClusters() {
 
   // Collect each slug under every non-existing prefix ancestor, stopping at
   // the first existing ancestor (deepest to shallowest). A slug may appear
-  // in multiple groups at different depths.
+  // in multiple groups at different depths. Dismissed pairs (from prior
+  // fold/skip/dismiss decisions) are the sole exclusion mechanism.
   const groups = Object.create(null); // null prototype avoids __proto__/constructor collisions
+  const existingParentGroups = Object.create(null);
   for (const slug of slugs) {
     const parts = slug.split('-');
     if (parts.length < 2) continue;
     for (let len = parts.length - 1; len >= 1; len--) {
       const prefix = parts.slice(0, len).join('-');
-      if (slugSet.has(prefix)) break; // stop at deepest existing ancestor
-      if (!groups[prefix]) groups[prefix] = [];
-      groups[prefix].push(`Wiki/Concepts/${slug}.md`);
+      if (slugSet.has(prefix)) {
+        if (!isPairDismissed(prefix, slug)) {
+          if (!existingParentGroups[prefix]) existingParentGroups[prefix] = [];
+          existingParentGroups[prefix].push(`Wiki/Concepts/${slug}.md`);
+        }
+        break; // stop at deepest existing ancestor regardless
+      }
+      if (!isPairDismissed(prefix, slug)) {
+        if (!groups[prefix]) groups[prefix] = [];
+        groups[prefix].push(`Wiki/Concepts/${slug}.md`);
+      }
     }
   }
 
-  // Keep only groups with 2+ children that haven't been dismissed.
-  const clusters = Object.entries(groups)
-    .filter(([prefix, children]) => children.length >= 2 && !dismissedSet.has(prefix))
-    .map(([impliedParent, children]) => ({ impliedParent, children: children.sort() }))
-    // Deepest clusters first (most hyphens in impliedParent) so the skill builds
-    // bottom-up: creating a deeper concept makes it a child in the next shallower
-    // cluster after a refresh. Break ties by cluster size descending.
-    .sort((a, b) => {
-      const depthDiff = b.impliedParent.split('-').length - a.impliedParent.split('-').length;
-      return depthDiff !== 0 ? depthDiff : b.children.length - a.children.length;
-    });
+  const newParentClusters = Object.entries(groups)
+    .filter(([, children]) => children.length >= 2)
+    .map(([impliedParent, children]) => ({ impliedParent, children: children.sort(), parentExists: false }));
+
+  const existingParentClusters = Object.entries(existingParentGroups)
+    .filter(([, children]) => children.length >= 1)
+    .map(([impliedParent, children]) => ({ impliedParent, children: children.sort(), parentExists: true }));
+
+  // Deepest first (most hyphens in impliedParent) so the skill builds bottom-up:
+  // deeper clusters are resolved before shallower ones that may depend on them.
+  // Ties broken by cluster size descending.
+  const clusters = [...newParentClusters, ...existingParentClusters].sort((a, b) => {
+    const depthDiff = b.impliedParent.split('-').length - a.impliedParent.split('-').length;
+    return depthDiff !== 0 ? depthDiff : b.children.length - a.children.length;
+  });
 
   return { clusters };
 }

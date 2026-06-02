@@ -1,0 +1,10 @@
+{
+  "knowledge-wiki-cluster": {
+    "dismissedPairs": [
+      [
+        "Wiki/Concepts/apple-watch-ultra.md",
+        "Wiki/Concepts/apple-watch.md"
+      ]
+    ]
+  }
+}

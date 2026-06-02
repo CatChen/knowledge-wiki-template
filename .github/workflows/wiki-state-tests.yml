@@ -34,11 +34,11 @@ jobs:
       test: wiki-state--set-last-run--knowledge-wiki-concept
       command: node scripts/wiki/wiki-state.mjs set-last-run knowledge-wiki-concept
 
-  dismiss-merge-pair:
+  dismiss-pair--merge:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-state--dismiss-merge-pair
-      command: node scripts/wiki/wiki-state.mjs dismiss-merge-pair "Wiki/Concepts/foo.md" "Wiki/Concepts/bar.md"
+      test: wiki-state--dismiss-pair--merge
+      command: node scripts/wiki/wiki-state.mjs dismiss-pair knowledge-wiki-merge "Wiki/Concepts/foo.md" "Wiki/Concepts/bar.md"
 
   prune-merge-pairs:
     uses: ./.github/workflows/wiki-test-runner.yml
@@ -46,26 +46,26 @@ jobs:
       test: wiki-state--prune-merge-pairs
       command: node scripts/wiki/wiki-state.mjs prune-merge-pairs
 
-  dismiss-cluster-parent:
+  dismiss-pair--cluster:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-state--dismiss-cluster-parent
-      command: node scripts/wiki/wiki-state.mjs dismiss-cluster-parent "parent-topic"
+      test: wiki-state--dismiss-pair--cluster
+      command: node scripts/wiki/wiki-state.mjs dismiss-pair knowledge-wiki-cluster "Wiki/Concepts/parent.md" "Wiki/Concepts/child.md"
 
-  prune-cluster-parents:
+  prune-cluster-pairs--no-parent:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-state--prune-cluster-parents
-      command: node scripts/wiki/wiki-state.mjs prune-cluster-parents
+      test: wiki-state--prune-cluster-pairs--no-parent
+      command: node scripts/wiki/wiki-state.mjs prune-cluster-pairs
 
-  prune-cluster-parents--no-descendants:
+  prune-cluster-pairs--no-descendants:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-state--prune-cluster-parents--no-descendants
-      command: node scripts/wiki/wiki-state.mjs prune-cluster-parents
+      test: wiki-state--prune-cluster-pairs--no-descendants
+      command: node scripts/wiki/wiki-state.mjs prune-cluster-pairs
 
-  prune-cluster-parents--has-descendants:
+  prune-cluster-pairs--has-descendants:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-state--prune-cluster-parents--has-descendants
-      command: node scripts/wiki/wiki-state.mjs prune-cluster-parents
+      test: wiki-state--prune-cluster-pairs--has-descendants
+      command: node scripts/wiki/wiki-state.mjs prune-cluster-pairs
