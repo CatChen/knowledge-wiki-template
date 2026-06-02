@@ -50,12 +50,12 @@ jobs:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-state--dismiss-pair--cluster
-      command: node scripts/wiki/wiki-state.mjs dismiss-pair knowledge-wiki-cluster "Wiki/Concepts/parent-topic.md" "Wiki/Concepts/parent-topic-child.md"
+      command: node scripts/wiki/wiki-state.mjs dismiss-pair knowledge-wiki-cluster "Wiki/Concepts/parent.md" "Wiki/Concepts/child.md"
 
-  prune-cluster-pairs:
+  prune-cluster-pairs--no-parent:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-state--prune-cluster-pairs
+      test: wiki-state--prune-cluster-pairs--no-parent
       command: node scripts/wiki/wiki-state.mjs prune-cluster-pairs
 
   prune-cluster-pairs--no-descendants:
