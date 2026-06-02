@@ -1,0 +1,10 @@
+{
+  "knowledge-wiki-cluster": {
+    "dismissedPairs": [
+      [
+        "Wiki/Concepts/parent-topic-child.md",
+        "Wiki/Concepts/parent-topic.md"
+      ]
+    ]
+  }
+}
