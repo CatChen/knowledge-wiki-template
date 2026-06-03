@@ -12,6 +12,7 @@
  *   duplicate-concepts      Concept pairs sharing 2+ source summaries
  *   orphan-concepts         Concept files with no inbound wikilinks
  *   orphan-summaries        Summary files whose source document no longer exists
+ *   ungrounded-concepts     Source-grounded concept files with no valid source summaries
  *   thin-concepts           Concept files below word/source thresholds (expansion candidates)
  *   missing-parent-clusters Clusters of concepts sharing an implied parent slug. New-parent clusters
  *                           have 2+ non-dismissed children and no existing parent concept;
@@ -26,6 +27,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { buildWikiGraph, extractBody } from './wiki-graph-lib.mjs';
+import { getBulletsFromSection } from './wiki-section-lib.mjs';
 
 const KNOWLEDGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const STATE_FILE = path.join(KNOWLEDGE_DIR, 'Wiki', '.state.json');
@@ -138,6 +140,44 @@ function orphanSummaries() {
     if (!fs.existsSync(sourcePath)) result[summaryRel] = { source };
   }
   return result;
+}
+
+function ungroundedConcepts() {
+  if (!fs.existsSync(CONCEPTS_DIR)) return [];
+
+  const existingSummaries = new Set(
+    (fs.existsSync(WIKI_SUMMARIES_DIR) ? findSummaryFiles(WIKI_SUMMARIES_DIR) : [])
+      .map(p => path.relative(KNOWLEDGE_DIR, p))
+  );
+  const ungrounded = [];
+
+  for (const entry of fs.readdirSync(CONCEPTS_DIR, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith('.md')) continue;
+
+    const relPath = `Wiki/Concepts/${entry.name}`;
+    const content = fs.readFileSync(path.join(CONCEPTS_DIR, entry.name), 'utf8');
+    const type = parseFrontmatterField(content, 'type')?.replace(/^['"]|['"]$/g, '');
+    if (type !== 'Concept') continue;
+
+    const sourceBullets = getBulletsFromSection(content, 'Sources') ?? [];
+    const validSourceCount = sourceBullets
+      .flatMap(line => {
+        const targets = [];
+        const re = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+        let match;
+        while ((match = re.exec(line)) !== null) targets.push(match[1].trim());
+        return targets;
+      })
+      .filter(target => target.startsWith('Wiki/Summaries/') && existingSummaries.has(`${target}.md`))
+      .length;
+
+    const connectedConceptCount = (getBulletsFromSection(content, 'Connected Concepts') ?? []).length;
+    if (connectedConceptCount > 0) continue;
+
+    if (validSourceCount === 0) ungrounded.push(relPath);
+  }
+
+  return ungrounded.sort();
 }
 
 function thinConcepts() {
@@ -322,6 +362,7 @@ const COMMANDS = {
   'duplicate-concepts': duplicateConcepts,
   'orphan-concepts': orphanConcepts,
   'orphan-summaries': orphanSummaries,
+  'ungrounded-concepts': ungroundedConcepts,
   'thin-concepts': thinConcepts,
   'missing-parent-clusters': missingParentClusters,
   'self-links': selfLinks,

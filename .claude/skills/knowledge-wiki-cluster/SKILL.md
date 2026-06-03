@@ -146,7 +146,7 @@ If `parentExists` is `true`, the parent concept file already exists — skip ahe
 If `parentExists` is `false`, run these steps:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs create "{impliedParent}" "{Display Name}"
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs create "{impliedParent}" "{Display Name}" --type Synthesis --icon notepad
 ```
 
 This creates `Wiki/Concepts/{impliedParent}.md`.
