@@ -95,6 +95,8 @@ Derive the summary's link-path by stripping the `.md` extension from the summary
 
 #### 3c. Update the index
 
+Write a one-line English description for the index entry. This must be synthesized fresh from the concept article body you just wrote or read — do not copy the description from the `## Key Concepts` line in the summary, and do not lift the first sentence of the article verbatim. The description should be a compact, self-contained characterization: what the concept *is* and why it matters, in one sentence, written for someone who has never encountered it.
+
 Run:
 
 ```bash
