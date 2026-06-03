@@ -106,7 +106,9 @@ Users may also type `skip` (leave for now; show again next run), `review one by 
 
 Users may also type `skip` (leave for now; show again next run), `review one by one` (link to parent then decide each child individually), or `stop` (halt all remaining clusters) in the Other field.
 
-**If `AskUserQuestion` is unavailable**, print as a numbered list; also accept `skip`, `review one by one`, or `stop`.
+When using an interactive question/options tool, keep the question text short: **"What would you like to do with the {Display Name} cluster?"** Do not cram the summary, reasoning, or option details into one long question line.
+
+The user must still be able to see the full decision context while choosing: the cluster summary, recommendation reasoning, all four options, and the extra accepted inputs. This context may be in the tool's body/details area, or in an immediately preceding assistant message if that message remains expanded and visible while the dialog is open. If the available question tool cannot keep that context visible together with the options, do not use it for this prompt. Instead, render the summary, reasoning, numbered options, and reply instructions as one normal markdown message, then wait for the user's reply. Accept 1, 2, 3, or 4; also accept `skip`, `review one by one`, or `stop` to halt all remaining clusters.
 
 ---
 
@@ -122,14 +124,18 @@ Do not create or edit any files until all decisions are collected. If `stop` was
 
 **Review one by one:** Process one child at a time. Present your recommendation and reasoning for that child, then ask:
 
-**If `AskUserQuestion` is available**, ask with these options (add `(Recommended)` to whichever applies):
+When using an interactive question/options tool, keep the question text short: **"What should happen to {child-display-name}?"** Do not cram the recommendation, reasoning, or option details into one long question line.
+
+The user must still be able to see the full decision context while choosing: the child recommendation, reasoning, both options, and the `done`/`stop` instructions. This context may be in the tool's body/details area, or in an immediately preceding assistant message if that message remains expanded and visible while the dialog is open. If the available question tool cannot keep that context visible together with the options, do not use it for this prompt. Instead, render the recommendation, reasoning, numbered options, and reply instructions as one normal markdown message, then wait for the user's reply.
+
+Use these options (add `(Recommended)` to whichever applies):
 
 | # | Option | Description |
 |---|--------|-------------|
 | 1 | `Fold "{child-display-name}" into "{Display Name}"` | Merge child's content into parent, then delete child |
 | 2 | `Skip "{child-display-name}"` | Keep child standalone; will be linked to parent |
 
-**If `AskUserQuestion` is unavailable**, print as a numbered list. Accept: `1` (Fold), `2` (Skip), `done` (proceed with decisions collected so far — unprocessed children will be treated as Skip), or `stop`.
+Accept: `1` (Fold), `2` (Skip), `done` (proceed with decisions collected so far — unprocessed children will be treated as Skip), or `stop`.
 
 If `stop` was entered, proceed to section 4f without creating any files.
 

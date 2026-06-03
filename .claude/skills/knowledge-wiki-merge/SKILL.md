@@ -97,9 +97,9 @@ Ask the user what to do using **exactly four options** as follows.
 | 3 | `Dismiss` | They are distinct; never show this pair again |
 | 4 | `Skip` | Leave for now; show again next run |
 
-**If `AskUserQuestion` is available**, invoke it with these four options — the option fields map to the `label` and `description` parameters. Users may type "stop" in the Other field to halt all remaining pairs.
+When using an interactive question/options tool, keep the question text short: **"What would you like to do with this candidate pair?"** Do not cram the summary, reasoning, or option details into one long question line.
 
-**If `AskUserQuestion` is unavailable** (e.g. Codex), print the options as a numbered list and ask the user to reply with 1, 2, 3, or 4 (or "stop" to halt all remaining pairs). Wait for a reply before proceeding.
+The user must still be able to see the full decision context while choosing: the candidate summary, recommendation reasoning, all four options, and the `stop` instruction. This context may be in the tool's body/details area, or in an immediately preceding assistant message if that message remains expanded and visible while the dialog is open. If the available question tool cannot keep that context visible together with the options, do not use it for this prompt. Instead, render the summary, reasoning, numbered options, and reply instructions as one normal markdown message, then wait for the user's reply. Accept 1, 2, 3, or 4 (or "stop" to halt all remaining pairs).
 
 #### 3c. If a Merge option was selected
 
