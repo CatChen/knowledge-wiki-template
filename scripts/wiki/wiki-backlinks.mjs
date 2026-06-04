@@ -1,8 +1,35 @@
 /**
  * Graph-aware backlink mutations.
  *
+ * After merging two concepts, `update-after-merge` updates all wiki files that
+ * link to the secondary concept. For each line containing the secondary
+ * wikilink:
+ *   - If the file being updated IS the primary concept file:
+ *     - Connected Concepts bullet lines are deleted, because replacing them
+ *       would create a self-link.
+ *     - Other lines, including body bullets and prose, rewrite the secondary
+ *       wikilink to plain text so it will not be broken after the secondary
+ *       file is deleted.
+ *   - If the primary concept already appears in the same Markdown list block,
+ *     the secondary link line is deleted instead of creating a duplicate.
+ *   - Otherwise, the secondary wikilink is replaced with the primary wikilink.
+ *
+ * A Markdown list block is a contiguous sequence of lines whose content starts
+ * with "- " or "* ". The same-list check is scoped to the block containing the
+ * secondary link line, so a primary link in a different section does not
+ * suppress replacement.
+ *
+ * Wikilink matching is prefix-safe: a concept such as `podcast` does not match
+ * `podcast-publishing`.
+ *
  * Usage:
  *   node scripts/wiki/wiki-backlinks.mjs update-after-merge <secondary-path> <primary-path> <primary-display-name>
+ *
+ * Example:
+ *   node scripts/wiki/wiki-backlinks.mjs update-after-merge \
+ *     Wiki/Concepts/podcast-publishing.md \
+ *     Wiki/Concepts/podcast.md \
+ *     "Podcast"
  */
 
 import fs from 'fs';
