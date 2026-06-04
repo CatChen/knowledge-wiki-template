@@ -138,11 +138,18 @@ if (subcommand === 'find-unprocessed-summaries') {
     process.exit(1);
   }
   if (!DISMISSED_PAIRS_SKILLS.has(skillName)) {
-    console.error(`Unknown skill: ${skillName}. Allowed: ${[...DISMISSED_PAIRS_SKILLS].join(', ')}`);
+    console.error(`Unknown skill: ${skillName}. Allowed for dismiss-pair: ${[...DISMISSED_PAIRS_SKILLS].join(', ')}`);
     process.exit(1);
   }
-  const normalizedPair = sortedPair(pathA, pathB);
-  const normalizedPairKey = pairKey(pathA, pathB);
+  const trimmedA = pathA.trim();
+  const trimmedB = pathB.trim();
+  const CONCEPT_PATH_RE = /^Wiki\/Concepts\/[^/]+\.md$/;
+  if (!CONCEPT_PATH_RE.test(trimmedA) || !CONCEPT_PATH_RE.test(trimmedB)) {
+    console.error('Paths must be relative concept paths, e.g. Wiki/Concepts/foo.md');
+    process.exit(1);
+  }
+  const normalizedPair = sortedPair(trimmedA, trimmedB);
+  const normalizedPairKey = pairKey(trimmedA, trimmedB);
 
   if (!state[skillName]) state[skillName] = {};
   if (!state[skillName].dismissedPairs) state[skillName].dismissedPairs = [];
@@ -184,20 +191,23 @@ if (subcommand === 'find-unprocessed-summaries') {
   let removedCount = 0;
 
   for (const pair of pairs) {
-    const [pathA, pathB] = pair;
-    const slugA = path.basename(pathA, '.md');
-    const slugB = path.basename(pathB, '.md');
+    // Identify the child path by comparing slugs. The child slug has the
+    // parent slug as a strict prefix followed by '-'. Sort order cannot be
+    // used because '-' sorts before '.', so "foo-bar.md" sorts before "foo.md".
+    // Parent absence is legitimate, but child absence means the dismissal is stale.
+    const slugOf = (p) => p.slice('Wiki/Concepts/'.length, -'.md'.length);
+    const [slugA, slugB] = pair.map(slugOf);
     let childPath;
-    if (slugA.startsWith(slugB + '-')) {
-      childPath = pathA;
-    } else if (slugB.startsWith(slugA + '-')) {
-      childPath = pathB;
+    if (slugB.startsWith(slugA + '-')) {
+      childPath = pair[1];
+    } else if (slugA.startsWith(slugB + '-')) {
+      childPath = pair[0];
     } else {
       kept.push(pair);
       continue;
     }
-    const childExists = fs.existsSync(path.join(KNOWLEDGE_DIR, childPath));
-    if (!childExists) {
+    const childMissing = !fs.existsSync(path.join(KNOWLEDGE_DIR, childPath));
+    if (childMissing) {
       removedCount++;
     } else {
       kept.push(pair);
@@ -205,7 +215,6 @@ if (subcommand === 'find-unprocessed-summaries') {
   }
 
   if (removedCount > 0) {
-    if (!state['knowledge-wiki-cluster']) state['knowledge-wiki-cluster'] = {};
     state['knowledge-wiki-cluster'].dismissedPairs = kept;
     saveState(state);
   }
