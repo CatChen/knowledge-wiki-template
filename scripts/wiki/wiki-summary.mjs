@@ -7,8 +7,8 @@
  * Usage:
  *   node scripts/wiki/wiki-summary.mjs list-stale
  *   node scripts/wiki/wiki-summary.mjs create <source-path> [--at <ISO timestamp>]
- *   node scripts/wiki/wiki-summary.mjs delete-concept - | <summary-rel-path> <concept-slug>
- *   node scripts/wiki/wiki-summary.mjs insert-concept - | <summary-rel-path> <concept-slug> <display-name> <description|->
+ *   node scripts/wiki/wiki-summary.mjs delete-concept <summary-rel-path> <concept-slug>
+ *   node scripts/wiki/wiki-summary.mjs insert-concept <summary-rel-path> <concept-slug> <display-name> <description>
  *
  * Subcommands:
  *   list-stale
