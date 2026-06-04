@@ -1,9 +1,20 @@
 /**
+ * wiki-lint.mjs
+ *
  * Wiki integrity checks. Each canonical subcommand is a read-only audit that
  * outputs JSON and starts with find-*.
  *
  * Usage:
  *   node scripts/wiki/wiki-lint.mjs <subcommand>
+ *
+ * Subcommands:
+ *   find-orphan-summaries          Summary files whose source document no longer exists
+ *   find-broken-summary-links      Wikilinks from summary files to missing concept files
+ *   find-broken-concept-links      Wikilinks inside concept files pointing to missing targets
+ *   find-ungrounded-concepts       Concept files with no valid source summaries
+ *   find-orphan-concepts           Concept files with no inbound wikilinks
+ *   find-self-links                Concept files whose Connected Concepts section links to themselves
+ *   find-duplicate-concept-links   Summary files whose Key Concepts section links to the same concept more than once
  */
 
 import fs from 'fs';
