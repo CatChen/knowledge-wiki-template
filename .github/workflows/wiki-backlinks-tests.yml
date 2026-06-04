@@ -1,0 +1,35 @@
+name: wiki-backlinks.mjs Tests
+
+on:
+  workflow_call:
+
+jobs:
+  update-after-merge--prose-replacement:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-backlinks--update-after-merge--prose-replacement
+      command: node scripts/wiki/wiki-backlinks.mjs update-after-merge Wiki/Concepts/old-topic.md Wiki/Concepts/new-topic.md "New Topic"
+
+  update-after-merge--duplicate-list-line:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-backlinks--update-after-merge--duplicate-list-line
+      command: node scripts/wiki/wiki-backlinks.mjs update-after-merge Wiki/Concepts/old-topic.md Wiki/Concepts/new-topic.md "New Topic"
+
+  update-after-merge--primary-file:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-backlinks--update-after-merge--primary-file
+      command: node scripts/wiki/wiki-backlinks.mjs update-after-merge Wiki/Concepts/old-topic.md Wiki/Concepts/new-topic.md "New Topic"
+
+  update-after-merge--prefix-safe:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-backlinks--update-after-merge--prefix-safe
+      command: node scripts/wiki/wiki-backlinks.mjs update-after-merge Wiki/Concepts/topic.md Wiki/Concepts/new-topic.md "New Topic"
+
+  alias--update-concept-backlinks:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-backlinks--alias--update-concept-backlinks
+      command: node scripts/wiki/update-concept-backlinks.mjs Wiki/Concepts/old-topic.md Wiki/Concepts/new-topic.md "New Topic"

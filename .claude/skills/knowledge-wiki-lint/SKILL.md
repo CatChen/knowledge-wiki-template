@@ -26,7 +26,7 @@ _Deletes summary files whose source document has been moved or deleted._
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs orphan-summaries
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs find-orphan-summaries
 ```
 
 Output is a JSON object keyed by orphan summary file path (relative to `KNOWLEDGE_PATH`). Each value has a `source` field with the path the summary expected to find, or `null` if the frontmatter had no `source` field.
@@ -60,7 +60,7 @@ _Creates missing concept files referenced by summaries._
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs broken-summary-links
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs find-broken-summary-links
 ```
 
 Output is a JSON object keyed by missing concept file path. Each value has a `referencedBy` array listing the summary files that link to that missing concept.
@@ -92,7 +92,7 @@ _Removes dead bullet points from concept files that link to missing targets._
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs broken-concept-links
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs find-broken-concept-links
 ```
 
 Output is a JSON object keyed by concept file path. Each value has a `brokenLinks` array of raw wikilink target strings (the text between `[[` and `]]`) that resolve to missing files.
@@ -124,7 +124,7 @@ _Deletes source-grounded concept files that no longer have any valid source summ
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs ungrounded-concepts
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs find-ungrounded-concepts
 ```
 
 Output is a JSON array of `type: Concept` file paths whose `## Sources` section has no bullet linking to an existing `Wiki/Summaries/...` file. `type: Synthesis` files are not included.
@@ -152,7 +152,7 @@ _Deletes concept files that nothing links to._
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs orphan-concepts
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs find-orphan-concepts
 ```
 
 Output is a JSON object keyed by orphan concept file path.
@@ -178,7 +178,7 @@ _Removes entries from `Wiki/index.md` that point to files that no longer exist o
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs remove-dead-links
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs delete-dead-links
 ```
 
 Output is a JSON object `{ "concepts": N, "summaries": N }` with the count of deleted entries in each section. The script writes the updated index automatically.
@@ -289,7 +289,7 @@ _Removes Connected Concepts entries where a concept links to itself._
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs self-links
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs find-self-links
 ```
 
 Output is a JSON object keyed by concept file path. If empty (`{}`), print `Check 11: no self-links.` and skip to Check 12.
@@ -313,7 +313,7 @@ _Consolidates Key Concepts entries where the same concept wikilink appears more 
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs duplicate-concept-links
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs find-duplicate-concept-links
 ```
 
 Output is a JSON object keyed by summary file path. Each value is an array of `{ conceptPath, lines }` objects — one per duplicated concept, listing all the lines that reference it. If empty (`{}`), print `Check 12: no duplicate concept links.` and skip to Final Steps.

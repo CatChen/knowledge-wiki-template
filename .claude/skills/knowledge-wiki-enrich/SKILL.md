@@ -20,7 +20,7 @@ Use `KNOWLEDGE_PATH` for all subsequent steps.
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs thin-concepts
+node {KNOWLEDGE_PATH}/scripts/wiki/candidates.mjs find-thin-concepts
 ```
 
 Output is `{ "concepts": [...] }` — an array of concept file paths sorted by word count ascending, so the thinnest concepts come first. A concept is thin if it has fewer than 150 words in its body AND at most 2 entries in its `## Sources` section.

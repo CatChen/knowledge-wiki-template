@@ -41,7 +41,7 @@ jobs:
       - name: Run command
         env:
           COMMAND: ${{ inputs.command }}
-        run: eval "$COMMAND" > /tmp/stdout.txt
+        run: eval "" > /tmp/stdout.txt 2> /tmp/stderr.txt
 
       - name: Detect assertions
         id: detect

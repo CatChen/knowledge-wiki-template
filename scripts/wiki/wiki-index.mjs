@@ -14,7 +14,7 @@
  *   node scripts/wiki/wiki-index.mjs delete-summary "<rel-path>"
  *   node scripts/wiki/wiki-index.mjs find-missing-summaries
  *   node scripts/wiki/wiki-index.mjs find-missing-concepts
- *   node scripts/wiki/wiki-index.mjs remove-dead-links
+ *   node scripts/wiki/wiki-index.mjs delete-dead-links
  *
  * <slug>     — the concept file basename without .md, e.g. "feature-gating"
  * <rel-path> — path relative to Wiki/Summaries/, e.g. "Twitter/Tweets-foo.summary"
@@ -33,19 +33,13 @@
 
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { getBulletsFromSection } from './wiki-section-lib.mjs';
+import { getBulletsFromSection } from './lib/sections.mjs';
+import { INDEX_PATH, KNOWLEDGE_DIR } from './lib/paths.mjs';
 
 // Suppress EPIPE errors when output is piped to head, less, etc.
 process.stdout.on('error', (err) => {
   if (err.code === 'EPIPE') process.exit(0);
 });
-
-const KNOWLEDGE_DIR = path.resolve(
-  path.dirname(fileURLToPath(import.meta.url)),
-  '../..',
-);
-const INDEX_PATH = path.join(KNOWLEDGE_DIR, 'Wiki', 'index.md');
 
 const CONCEPT_RE = /^- \[\[Wiki\/Concepts\/([^|]+)\|([^\]]+)\]\] — (.+)$/;
 const SUMMARY_RE = /^- \[\[Wiki\/Summaries\/([^\]]+)\]\] — (.+)$/;
@@ -261,7 +255,10 @@ switch (cmd) {
     break;
   }
 
-  case 'remove-dead-links': {
+  case 'remove-dead-links':
+    console.error("Deprecated command 'remove-dead-links'. Use 'delete-dead-links' instead.");
+  // fallthrough
+  case 'delete-dead-links': {
     // Delete index entries whose files no longer exist on disk.
     // Writes the updated index and outputs the counts of deleted entries.
     const { concepts, summaries } = parseIndex();
@@ -320,7 +317,7 @@ switch (cmd) {
         '  delete-summary "<rel-path>"',
         '  find-missing-summaries',
         '  find-missing-concepts',
-        '  remove-dead-links',
+        '  delete-dead-links',
       ].join('\n') + '\n',
     );
     process.exit(1);

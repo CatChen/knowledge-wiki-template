@@ -1,0 +1,14 @@
+{
+  "knowledge-wiki-cluster": {
+    "dismissedPairs": [
+      [
+        "Wiki/Concepts/apple.md",
+        "Wiki/Concepts/apple-watch.md"
+      ],
+      [
+        "Wiki/Concepts/apple.md",
+        "Wiki/Concepts/apple-tv.md"
+      ]
+    ]
+  }
+}

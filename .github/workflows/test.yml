@@ -15,3 +15,12 @@ jobs:
 
   wiki-state:
     uses: ./.github/workflows/wiki-state-tests.yml
+
+  wiki-lint:
+    uses: ./.github/workflows/wiki-lint-tests.yml
+
+  wiki-candidates:
+    uses: ./.github/workflows/wiki-candidates-tests.yml
+
+  wiki-backlinks:
+    uses: ./.github/workflows/wiki-backlinks-tests.yml

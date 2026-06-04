@@ -40,16 +40,14 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { fileURLToPath } from 'url';
-import { extractBody } from './wiki-graph-lib.mjs';
+import { extractBody } from './lib/graph.mjs';
 import {
   insertBulletInSection,
   deleteBulletFromSection,
-} from './wiki-section-lib.mjs';
+} from './lib/sections.mjs';
+import { KNOWLEDGE_DIR } from './lib/paths.mjs';
 
 process.stdout.on('error', err => { if (err.code === 'EPIPE') process.exit(0); });
-
-const KNOWLEDGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 
 // Paths (relative to KNOWLEDGE_DIR) to skip during traversal.
 // Directories must end with '/'. Files are matched exactly.

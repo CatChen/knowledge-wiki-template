@@ -36,26 +36,14 @@
  */
 
 import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 import {
   sectionContains,
   insertBulletInSection,
   deleteBulletFromSection,
-} from './wiki-section-lib.mjs';
+} from './lib/sections.mjs';
+import { CONCEPTS_DIR, conceptFullPath, conceptRelPath } from './lib/paths.mjs';
 
 process.stdout.on('error', err => { if (err.code === 'EPIPE') process.exit(0); });
-
-const KNOWLEDGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const CONCEPTS_DIR = path.join(KNOWLEDGE_DIR, 'Wiki', 'Concepts');
-
-function conceptFullPath(slug) {
-  return path.join(CONCEPTS_DIR, `${slug}.md`);
-}
-
-function conceptRelPath(slug) {
-  return path.join('Wiki', 'Concepts', `${slug}.md`);
-}
 
 function readConcept(slug) {
   const filePath = conceptFullPath(slug);

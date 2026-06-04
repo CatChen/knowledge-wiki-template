@@ -24,7 +24,7 @@ The knowledge base root is the Git repository root. Run `git rev-parse --show-to
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs missing-parent-clusters
+node {KNOWLEDGE_PATH}/scripts/wiki/candidates.mjs find-implied-parent-concepts
 ```
 
 This outputs `{ "clusters": [...] }` sorted **deepest first** (most hyphens in `impliedParent`), with ties broken by cluster size descending. Both new-parent and existing-parent clusters are interleaved in this single ordering. Each entry has:
@@ -187,7 +187,7 @@ For each child where Fold was chosen, execute the `knowledge-wiki-merge` step 3c
 This runs whether or not all children were processed. Add `{impliedParent}` to the in-memory processed set. Re-run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs missing-parent-clusters
+node {KNOWLEDGE_PATH}/scripts/wiki/candidates.mjs find-implied-parent-concepts
 ```
 
 Replace your working cluster list with this fresh output, excluding any slug already in the processed set.

@@ -38,11 +38,8 @@
 
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-
-const KNOWLEDGE_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-const WIKI_SUMMARIES_DIR = path.join(KNOWLEDGE_DIR, 'Wiki', 'Summaries');
-const STATE_FILE = path.join(KNOWLEDGE_DIR, 'Wiki', '.state.json');
+import { KNOWLEDGE_DIR, STATE_FILE, SUMMARIES_DIR } from './lib/paths.mjs';
+import { readState, saveState, pairKey, sortedPair } from './lib/state-store.mjs';
 
 // Skills that use last_run_at tracking and unprocessed-summary detection.
 const LAST_RUN_SKILLS = new Set([
@@ -63,14 +60,7 @@ if (!subcommand) {
   process.exit(1);
 }
 
-const state = fs.existsSync(STATE_FILE)
-  ? JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'))
-  : {};
-
-function saveState() {
-  fs.mkdirSync(path.dirname(STATE_FILE), { recursive: true });
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2) + '\n');
-}
+const state = readState();
 
 if (subcommand === 'find-unprocessed-summaries') {
   const [skillName] = args;
@@ -108,11 +98,11 @@ if (subcommand === 'find-unprocessed-summaries') {
   }
 
   const result = [];
-  if (!fs.existsSync(WIKI_SUMMARIES_DIR)) {
+  if (!fs.existsSync(SUMMARIES_DIR)) {
     console.log(JSON.stringify(result, null, 2));
     process.exit(0);
   }
-  for (const fullPath of findSummaryFiles(WIKI_SUMMARIES_DIR)) {
+  for (const fullPath of findSummaryFiles(SUMMARIES_DIR)) {
     const relPath = path.relative(KNOWLEDGE_DIR, fullPath);
     if (lastRunTime === null) {
       result.push(relPath);
@@ -138,7 +128,7 @@ if (subcommand === 'find-unprocessed-summaries') {
   }
   if (!state[skillName]) state[skillName] = {};
   state[skillName].last_run_at = new Date().toISOString();
-  saveState();
+  saveState(state);
   console.log(state[skillName].last_run_at);
 
 } else if (subcommand === 'dismiss-pair') {
@@ -151,18 +141,18 @@ if (subcommand === 'find-unprocessed-summaries') {
     console.error(`Unknown skill: ${skillName}. Allowed: ${[...DISMISSED_PAIRS_SKILLS].join(', ')}`);
     process.exit(1);
   }
-  const normalizedPair = [pathA, pathB].sort();
-  const pairKey = normalizedPair.join('|');
+  const normalizedPair = sortedPair(pathA, pathB);
+  const normalizedPairKey = pairKey(pathA, pathB);
 
   if (!state[skillName]) state[skillName] = {};
   if (!state[skillName].dismissedPairs) state[skillName].dismissedPairs = [];
 
   const existing = state[skillName].dismissedPairs;
-  const alreadyDismissed = existing.some(([a, b]) => [a, b].sort().join('|') === pairKey);
+  const alreadyDismissed = existing.some(([a, b]) => pairKey(a, b) === normalizedPairKey);
 
   if (!alreadyDismissed) {
     existing.push(normalizedPair);
-    saveState();
+    saveState(state);
     console.log(`Dismissed: ${normalizedPair[0]} / ${normalizedPair[1]}`);
   } else {
     console.log(`Already dismissed: ${normalizedPair[0]} / ${normalizedPair[1]}`);
@@ -184,7 +174,7 @@ if (subcommand === 'find-unprocessed-summaries') {
 
   if (removedCount > 0) {
     state['knowledge-wiki-merge'].dismissedPairs = kept;
-    saveState();
+    saveState(state);
   }
   console.log(removedCount);
 
@@ -217,7 +207,7 @@ if (subcommand === 'find-unprocessed-summaries') {
   if (removedCount > 0) {
     if (!state['knowledge-wiki-cluster']) state['knowledge-wiki-cluster'] = {};
     state['knowledge-wiki-cluster'].dismissedPairs = kept;
-    saveState();
+    saveState(state);
   }
   console.log(removedCount);
 

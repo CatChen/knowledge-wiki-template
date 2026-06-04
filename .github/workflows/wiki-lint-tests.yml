@@ -1,0 +1,149 @@
+name: wiki-lint.mjs Tests
+
+on:
+  workflow_call:
+
+jobs:
+  find-orphan-summaries--empty:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-orphan-summaries--empty
+      command: node scripts/wiki/wiki-lint.mjs find-orphan-summaries
+
+  find-orphan-summaries--positive:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-orphan-summaries--positive
+      command: node scripts/wiki/wiki-lint.mjs find-orphan-summaries
+
+  find-broken-summary-links--empty:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-broken-summary-links--empty
+      command: node scripts/wiki/wiki-lint.mjs find-broken-summary-links
+
+  find-broken-summary-links--positive:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-broken-summary-links--positive
+      command: node scripts/wiki/wiki-lint.mjs find-broken-summary-links
+
+  find-broken-concept-links--empty:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-broken-concept-links--empty
+      command: node scripts/wiki/wiki-lint.mjs find-broken-concept-links
+
+  find-broken-concept-links--positive:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-broken-concept-links--positive
+      command: node scripts/wiki/wiki-lint.mjs find-broken-concept-links
+
+  find-ungrounded-concepts--empty:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-ungrounded-concepts--empty
+      command: node scripts/wiki/wiki-lint.mjs find-ungrounded-concepts
+
+  find-ungrounded-concepts--positive:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-ungrounded-concepts--positive
+      command: node scripts/wiki/wiki-lint.mjs find-ungrounded-concepts
+
+  find-orphan-concepts--empty:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-orphan-concepts--empty
+      command: node scripts/wiki/wiki-lint.mjs find-orphan-concepts
+
+  find-orphan-concepts--positive:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-orphan-concepts--positive
+      command: node scripts/wiki/wiki-lint.mjs find-orphan-concepts
+
+  find-self-links--empty:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-self-links--empty
+      command: node scripts/wiki/wiki-lint.mjs find-self-links
+
+  find-self-links--positive:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-self-links--positive
+      command: node scripts/wiki/wiki-lint.mjs find-self-links
+
+  find-duplicate-concept-links--empty:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-duplicate-concept-links--empty
+      command: node scripts/wiki/wiki-lint.mjs find-duplicate-concept-links
+
+  find-duplicate-concept-links--positive:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-duplicate-concept-links--positive
+      command: node scripts/wiki/wiki-lint.mjs find-duplicate-concept-links
+
+  alias--orphan-summaries:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--alias--orphan-summaries
+      command: node scripts/wiki/wiki-lint.mjs orphan-summaries
+
+  alias--broken-summary-links:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--alias--broken-summary-links
+      command: node scripts/wiki/wiki-lint.mjs broken-summary-links
+
+  alias--broken-concept-links:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--alias--broken-concept-links
+      command: node scripts/wiki/wiki-lint.mjs broken-concept-links
+
+  alias--ungrounded-concepts:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--alias--ungrounded-concepts
+      command: node scripts/wiki/wiki-lint.mjs ungrounded-concepts
+
+  alias--orphan-concepts:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--alias--orphan-concepts
+      command: node scripts/wiki/wiki-lint.mjs orphan-concepts
+
+  alias--self-links:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--alias--self-links
+      command: node scripts/wiki/wiki-lint.mjs self-links
+
+  alias--duplicate-concept-links:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--alias--duplicate-concept-links
+      command: node scripts/wiki/wiki-lint.mjs duplicate-concept-links
+
+  alias--duplicate-concepts:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--alias--duplicate-concepts
+      command: node scripts/wiki/wiki-lint.mjs duplicate-concepts
+
+  alias--missing-parent-clusters:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--alias--missing-parent-clusters
+      command: node scripts/wiki/wiki-lint.mjs missing-parent-clusters
+
+  alias--thin-concepts:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--alias--thin-concepts
+      command: node scripts/wiki/wiki-lint.mjs thin-concepts

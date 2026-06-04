@@ -1,0 +1,12 @@
+{
+  "candidates": [
+    {
+      "conceptA": "Wiki/Concepts/a.md",
+      "conceptB": "Wiki/Concepts/b.md",
+      "sharedSources": [
+        "Wiki/Summaries/Notes/one.summary.md",
+        "Wiki/Summaries/Notes/two.summary.md"
+      ]
+    }
+  ]
+}

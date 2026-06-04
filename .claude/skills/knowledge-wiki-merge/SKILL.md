@@ -20,7 +20,7 @@ Use `KNOWLEDGE_PATH` for all subsequent steps.
 **Structural candidates** are pairs detected by shared source material — concept files that share two or more `## Sources` entries. Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-lint.mjs duplicate-concepts
+node {KNOWLEDGE_PATH}/scripts/wiki/candidates.mjs find-shared-source-concepts
 ```
 
 This script automatically filters out previously dismissed pairs from `Wiki/.state.json`. Output is `{ "candidates": [...] }` sorted by shared source count descending. Tag each as `detection: "structural"`.
@@ -131,7 +131,7 @@ Then execute:
 6. **Update backlinks**: Run:
 
    ```bash
-   node {KNOWLEDGE_PATH}/scripts/wiki/update-concept-backlinks.mjs {secondary-path} {primary-path} "{primary display name}"
+   node {KNOWLEDGE_PATH}/scripts/wiki/wiki-backlinks.mjs update-after-merge {secondary-path} {primary-path} "{primary display name}"
    ```
 
    This finds every wiki file that links to the secondary concept and handles each one correctly: if the file already has a link to the primary, it removes the secondary link line to avoid creating a duplicate; otherwise it replaces the secondary wikilink with the primary.

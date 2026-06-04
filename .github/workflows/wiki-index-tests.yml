@@ -100,8 +100,14 @@ jobs:
       test: wiki-index--find-missing-concepts--unindexed
       command: node scripts/wiki/wiki-index.mjs find-missing-concepts
 
-  remove-dead-links:
+  delete-dead-links:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
-      test: wiki-index--remove-dead-links
+      test: wiki-index--delete-dead-links
+      command: node scripts/wiki/wiki-index.mjs delete-dead-links
+
+  alias--remove-dead-links:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-index--alias--remove-dead-links
       command: node scripts/wiki/wiki-index.mjs remove-dead-links

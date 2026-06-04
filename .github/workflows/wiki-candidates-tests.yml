@@ -1,0 +1,59 @@
+name: candidates.mjs Tests
+
+on:
+  workflow_call:
+
+jobs:
+  find-shared-source-concepts--empty:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-candidates--find-shared-source-concepts--empty
+      command: node scripts/wiki/candidates.mjs find-shared-source-concepts
+
+  find-shared-source-concepts--positive:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-candidates--find-shared-source-concepts--positive
+      command: node scripts/wiki/candidates.mjs find-shared-source-concepts
+
+  find-shared-source-concepts--dismissed:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-candidates--find-shared-source-concepts--dismissed
+      command: node scripts/wiki/candidates.mjs find-shared-source-concepts
+
+  find-implied-parent-concepts--empty:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-candidates--find-implied-parent-concepts--empty
+      command: node scripts/wiki/candidates.mjs find-implied-parent-concepts
+
+  find-implied-parent-concepts--positive:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-candidates--find-implied-parent-concepts--positive
+      command: node scripts/wiki/candidates.mjs find-implied-parent-concepts
+
+  find-implied-parent-concepts--dismissed:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-candidates--find-implied-parent-concepts--dismissed
+      command: node scripts/wiki/candidates.mjs find-implied-parent-concepts
+
+  find-thin-concepts--empty:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-candidates--find-thin-concepts--empty
+      command: node scripts/wiki/candidates.mjs find-thin-concepts
+
+  find-thin-concepts--positive:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-candidates--find-thin-concepts--positive
+      command: node scripts/wiki/candidates.mjs find-thin-concepts
+
+  alias--duplicate-concepts:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-candidates--alias--duplicate-concepts
+      command: node scripts/wiki/candidates.mjs duplicate-concepts
