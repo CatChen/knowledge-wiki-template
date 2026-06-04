@@ -99,6 +99,9 @@ export function findUngroundedConcepts() {
       .filter((target) => target.startsWith('Wiki/Summaries/') && existingSummaries.has(`${target}.md`))
       .length;
 
+    const connectedConceptCount = (getBulletsFromSection(content, 'Connected Concepts') ?? []).length;
+    if (connectedConceptCount > 0) continue;
+
     if (validSourceCount === 0) ungrounded.push(relPath);
   }
 
