@@ -4,24 +4,40 @@ on:
   workflow_call:
 
 jobs:
+  # Test scenario:
+  # A prose line references the secondary concept and should be rewritten to the
+  # primary concept. If the same prose line also mentions the primary concept,
+  # the line is still preserved as prose instead of being deleted as a duplicate.
   update-after-merge--prose-replacement:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-backlinks--update-after-merge--prose-replacement
       command: node scripts/wiki/wiki-backlinks.mjs update-after-merge Wiki/Concepts/old-topic.md Wiki/Concepts/new-topic.md "New Topic"
 
+  # Test scenario:
+  # A list block already contains the primary concept. A duplicate list item that
+  # only points at the secondary concept should be deleted instead of rewritten,
+  # avoiding two bullets for the same merged concept.
   update-after-merge--duplicate-list-line:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-backlinks--update-after-merge--duplicate-list-line
       command: node scripts/wiki/wiki-backlinks.mjs update-after-merge Wiki/Concepts/old-topic.md Wiki/Concepts/new-topic.md "New Topic"
 
+  # Test scenario:
+  # The primary file may mention the secondary concept in its own prose and in
+  # Connected Concepts. Prose references become plain display text, while the
+  # self-linking Connected Concepts bullet is removed.
   update-after-merge--primary-file:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-backlinks--update-after-merge--primary-file
       command: node scripts/wiki/wiki-backlinks.mjs update-after-merge Wiki/Concepts/old-topic.md Wiki/Concepts/new-topic.md "New Topic"
 
+  # Test scenario:
+  # Slug matching must be exact. Updating Wiki/Concepts/topic.md should not touch
+  # links to Wiki/Concepts/topic-modeling.md, even though the slug shares the
+  # same prefix.
   update-after-merge--prefix-safe:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:

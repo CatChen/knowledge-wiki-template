@@ -77,7 +77,7 @@ export function runUpdateAfterMerge(args) {
     console.error('Usage: node scripts/wiki/wiki-backlinks.mjs update-after-merge <secondary-path> <primary-path> <primary-display-name>');
     process.exit(1);
   }
-  console.log(JSON.stringify(updateAfterMerge(secondaryPath, primaryPath, primaryDisplayName), null, 2));
+  updateAfterMerge(secondaryPath, primaryPath, primaryDisplayName);
 }
 
 function main() {
