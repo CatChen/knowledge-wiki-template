@@ -8,5 +8,6 @@ tags: []
 
 This mentions [[Wiki/Concepts/old-topic|Old Topic]] in prose.
 
-## Sources
+This mentions both [[Wiki/Concepts/old-topic|Old Topic]] and [[Wiki/Concepts/new-topic|New Topic]] in prose.
 
+## Sources

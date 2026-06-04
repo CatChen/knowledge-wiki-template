@@ -38,7 +38,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import { KNOWLEDGE_DIR, STATE_FILE, SUMMARIES_DIR } from './lib/paths.mjs';
+import { KNOWLEDGE_DIR, SUMMARIES_DIR } from './lib/paths.mjs';
 import { readState, saveState, pairKey, sortedPair } from './lib/state-store.mjs';
 
 // Skills that use last_run_at tracking and unprocessed-summary detection.

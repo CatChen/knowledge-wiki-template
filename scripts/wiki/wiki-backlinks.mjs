@@ -51,11 +51,12 @@ export function updateAfterMerge(secondaryPath, primaryPath, primaryDisplayName)
         return line.replace(secondaryLinkRe, (_, displayName) => displayName ?? secondarySlug);
       }
 
+      const isListItem = /^\s*[-*]\s/.test(line);
       const { start, end } = listBlockAround(lines, i);
       const block = lines.slice(start, end + 1);
       const primaryInSameList = block.some((blockLine) => lineHasConceptLink(blockLine, primaryPrefix));
 
-      if (primaryInSameList) return null;
+      if (isListItem && primaryInSameList) return null;
       secondaryLinkRe.lastIndex = 0;
       return line.replace(secondaryLinkRe, replacementLink);
     });
