@@ -39,9 +39,7 @@ jobs:
           fi
 
       - name: Run command
-        env:
-          COMMAND: ${{ inputs.command }}
-        run: eval "" > /tmp/stdout.txt 2> /tmp/stderr.txt
+        run: bash -c '${{ inputs.command }}' > /tmp/stdout.txt 2> /tmp/stderr.txt
 
       - name: Detect assertions
         id: detect
