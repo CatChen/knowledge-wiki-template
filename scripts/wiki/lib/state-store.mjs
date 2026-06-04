@@ -21,12 +21,28 @@ export function pairKey(pathA, pathB) {
   return sortedPair(pathA, pathB).join('|');
 }
 
+const dismissedPairSetCache = new WeakMap();
+
 export function dismissedPairSet(state, skillName) {
-  return new Set(
-    (state[skillName]?.dismissedPairs ?? [])
+  const pairs = state[skillName]?.dismissedPairs ?? [];
+  let stateCache = dismissedPairSetCache.get(state);
+  if (!stateCache) {
+    stateCache = new Map();
+    dismissedPairSetCache.set(state, stateCache);
+  }
+
+  const cached = stateCache.get(skillName);
+  if (cached && cached.pairs === pairs && cached.length === pairs.length) {
+    return cached.set;
+  }
+
+  const set = new Set(
+    pairs
       .filter((entry) => Array.isArray(entry) && entry.length === 2)
       .map(([a, b]) => pairKey(a, b)),
   );
+  stateCache.set(skillName, { pairs, length: pairs.length, set });
+  return set;
 }
 
 export function isPairDismissed(state, skillName, pathA, pathB) {
