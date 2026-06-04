@@ -12,7 +12,6 @@ import { buildWikiGraph } from './lib/graph.mjs';
 import { parseFrontmatterField, parseLooseFrontmatterField } from './lib/frontmatter.mjs';
 import { CONCEPTS_DIR, KNOWLEDGE_DIR, SUMMARIES_DIR, relToKnowledge } from './lib/paths.mjs';
 import { getBulletsFromSection } from './lib/sections.mjs';
-import { runCandidateCommand } from './candidates.mjs';
 
 function findSummaryFiles(dir, results = []) {
   if (!fs.existsSync(dir)) return results;
@@ -177,22 +176,6 @@ const COMMANDS = {
   'find-duplicate-concept-links': findDuplicateConceptLinks,
 };
 
-const ALIASES = {
-  'broken-concept-links': 'find-broken-concept-links',
-  'broken-summary-links': 'find-broken-summary-links',
-  'orphan-concepts': 'find-orphan-concepts',
-  'orphan-summaries': 'find-orphan-summaries',
-  'ungrounded-concepts': 'find-ungrounded-concepts',
-  'self-links': 'find-self-links',
-  'duplicate-concept-links': 'find-duplicate-concept-links',
-};
-
-const CANDIDATE_ALIASES = new Set([
-  'duplicate-concepts',
-  'missing-parent-clusters',
-  'thin-concepts',
-]);
-
 const subcommand = process.argv[2];
 
 if (!subcommand || subcommand === '--help') {
@@ -201,14 +184,8 @@ if (!subcommand || subcommand === '--help') {
   process.exit(1);
 }
 
-const canonical = ALIASES[subcommand] ?? subcommand;
-if (COMMANDS[canonical]) {
-  if (canonical !== subcommand) {
-    console.error(`Deprecated command '${subcommand}'. Use '${canonical}' instead.`);
-  }
-  console.log(JSON.stringify(COMMANDS[canonical](), null, 2));
-} else if (CANDIDATE_ALIASES.has(subcommand)) {
-  runCandidateCommand(subcommand, { warn: true });
+if (COMMANDS[subcommand]) {
+  console.log(JSON.stringify(COMMANDS[subcommand](), null, 2));
 } else {
   console.error(`Unknown subcommand: ${subcommand}`);
   console.error('Subcommands: ' + Object.keys(COMMANDS).join(', '));

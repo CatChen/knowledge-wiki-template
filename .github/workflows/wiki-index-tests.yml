@@ -105,9 +105,3 @@ jobs:
     with:
       test: wiki-index--delete-dead-links
       command: node scripts/wiki/wiki-index.mjs delete-dead-links
-
-  alias--remove-dead-links:
-    uses: ./.github/workflows/wiki-test-runner.yml
-    with:
-      test: wiki-index--alias--remove-dead-links
-      command: node scripts/wiki/wiki-index.mjs remove-dead-links 2> /tmp/stderr.txt

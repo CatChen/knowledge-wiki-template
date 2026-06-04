@@ -255,9 +255,6 @@ switch (cmd) {
     break;
   }
 
-  case 'remove-dead-links':
-    console.error("Deprecated command 'remove-dead-links'. Use 'delete-dead-links' instead.");
-  // fallthrough
   case 'delete-dead-links': {
     // Delete index entries whose files no longer exist on disk.
     // Writes the updated index and outputs the counts of deleted entries.

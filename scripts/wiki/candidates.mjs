@@ -127,19 +127,9 @@ export const COMMANDS = {
   'find-thin-concepts': findThinConcepts,
 };
 
-export const ALIASES = {
-  'duplicate-concepts': 'find-shared-source-concepts',
-  'missing-parent-clusters': 'find-implied-parent-concepts',
-  'thin-concepts': 'find-thin-concepts',
-};
-
-export function runCandidateCommand(subcommand, { warn = false } = {}) {
-  const canonical = ALIASES[subcommand] ?? subcommand;
-  const fn = COMMANDS[canonical];
+export function runCandidateCommand(subcommand) {
+  const fn = COMMANDS[subcommand];
   if (!fn) return false;
-  if (warn || canonical !== subcommand) {
-    console.error(`Deprecated command '${subcommand}'. Use '${canonical}' instead.`);
-  }
   console.log(JSON.stringify(fn(), null, 2));
   return true;
 }
