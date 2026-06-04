@@ -56,4 +56,4 @@ jobs:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-candidates--alias--duplicate-concepts
-      command: node scripts/wiki/candidates.mjs duplicate-concepts
+      command: node scripts/wiki/candidates.mjs duplicate-concepts 2> /tmp/stderr.txt

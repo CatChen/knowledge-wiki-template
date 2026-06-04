@@ -32,4 +32,4 @@ jobs:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-backlinks--alias--update-concept-backlinks
-      command: node scripts/wiki/update-concept-backlinks.mjs Wiki/Concepts/old-topic.md Wiki/Concepts/new-topic.md "New Topic"
+      command: node scripts/wiki/update-concept-backlinks.mjs Wiki/Concepts/old-topic.md Wiki/Concepts/new-topic.md "New Topic" 2> /tmp/stderr.txt
