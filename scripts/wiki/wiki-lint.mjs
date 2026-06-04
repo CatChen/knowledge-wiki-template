@@ -34,7 +34,7 @@ function findSummaryFiles(dir, results = []) {
   return results;
 }
 
-export function findBrokenConceptLinks() {
+function findBrokenConceptLinks() {
   const { allFiles, links } = buildWikiGraph(KNOWLEDGE_DIR);
   const result = {};
   for (const link of links) {
@@ -46,7 +46,7 @@ export function findBrokenConceptLinks() {
   return result;
 }
 
-export function findBrokenSummaryLinks() {
+function findBrokenSummaryLinks() {
   const { allFiles, links } = buildWikiGraph(KNOWLEDGE_DIR);
   const result = {};
   for (const link of links) {
@@ -59,7 +59,7 @@ export function findBrokenSummaryLinks() {
   return result;
 }
 
-export function findOrphanConcepts() {
+function findOrphanConcepts() {
   const { inboundCounts } = buildWikiGraph(KNOWLEDGE_DIR);
   const result = {};
   for (const [relPath, count] of Object.entries(inboundCounts)) {
@@ -68,7 +68,7 @@ export function findOrphanConcepts() {
   return result;
 }
 
-export function findOrphanSummaries() {
+function findOrphanSummaries() {
   const result = {};
   for (const fullPath of findSummaryFiles(SUMMARIES_DIR)) {
     const content = fs.readFileSync(fullPath, 'utf8');
@@ -84,7 +84,7 @@ export function findOrphanSummaries() {
   return result;
 }
 
-export function findUngroundedConcepts() {
+function findUngroundedConcepts() {
   if (!fs.existsSync(CONCEPTS_DIR)) return [];
 
   const existingSummaries = new Set(findSummaryFiles(SUMMARIES_DIR).map((file) => relToKnowledge(file)));
@@ -116,7 +116,7 @@ export function findUngroundedConcepts() {
   return ungrounded.sort();
 }
 
-export function findSelfLinks() {
+function findSelfLinks() {
   if (!fs.existsSync(CONCEPTS_DIR)) return {};
   const result = {};
   for (const entry of fs.readdirSync(CONCEPTS_DIR, { withFileTypes: true })) {
@@ -133,7 +133,7 @@ export function findSelfLinks() {
   return result;
 }
 
-export function findDuplicateConceptLinks() {
+function findDuplicateConceptLinks() {
   if (!fs.existsSync(SUMMARIES_DIR)) return {};
   const result = {};
   const conceptLinkRe = /\[\[Wiki\/Concepts\/([^\]|]+)(?:\|[^\]]+)?\]\]/g;
