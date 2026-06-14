@@ -52,7 +52,7 @@ Be conservative — wrongly dismissed pairs require manually editing `Wiki/.stat
 
 ### 4. Present and resolve each cluster
 
-Process one cluster at a time. Use a **separate interaction for each cluster** — never combine multiple clusters into a single question.
+Process one cluster at a time. Use a **separate interaction for each cluster** — never combine multiple clusters into a single question, even if you intend to recommend the same action for several in a row. When using `AskUserQuestion`, pass **exactly one question per call**. Never use the multi-question form to batch clusters.
 
 Maintain an **in-memory processed set** of `impliedParent` slugs handled in this session. After creating a parent, exclude already-processed slugs from the refreshed cluster list.
 
@@ -64,7 +64,7 @@ Determine the **Display Name** for the implied parent before presenting:
 - If `parentExists` is `true`, read the parent concept file and take the Display Name from its H1 heading (`# …`). This preserves the exact capitalisation already in use (e.g. `ios` → "iOS", `macos` → "macOS").
 - If `parentExists` is `false`, derive a human-readable name from the slug (e.g. `audi` → `Audi`, `apple-watch` → `Apple Watch`, `career` → `Career`).
 
-Read every child concept file. Present a cluster summary as a 3-column table with each child's description and fold/skip recommendation inline. Output the table as markdown (not in a code block) so it renders:
+Read every child concept file. Present a cluster summary as a 3-column table with each child's description and fold/skip recommendation inline. Output the table as a **normal assistant message** (not in a code block) so it renders — this message must be sent **before** calling any interactive question tool:
 
 ---
 **Cluster: {Display Name}  ({N} children, {existing parent | new parent})**
