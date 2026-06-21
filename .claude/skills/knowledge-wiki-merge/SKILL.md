@@ -23,7 +23,7 @@ Use `KNOWLEDGE_PATH` for all subsequent steps.
 node {KNOWLEDGE_PATH}/scripts/wiki/candidates.mjs find-shared-source-concepts
 ```
 
-This script automatically filters out previously dismissed pairs from `Wiki/.state.json`. Output is `{ "candidates": [...] }` sorted by shared source count descending. Tag each as `detection: "structural"`.
+This script automatically filters out previously dismissed pairs from `Wiki/.state.json`. Output is `{ "candidates": [...] }` sorted by shared source count descending. Tag each as `detection: "structural"`. **Do not pipe through `head` or any other truncating command** — every candidate must be evaluated.
 
 **LLM pre-filter (structural only):** Before proceeding, review the structural candidates and eliminate any pair that is clearly about different topics despite sharing sources — pairs where the shared sources happen to cover two unrelated ideas (e.g. `applescript` and `email-marketing` appearing in the same AppleScript email tutorial). For each eliminated pair, call:
 
@@ -36,10 +36,10 @@ where `pathA` and `pathB` are the full relative paths (e.g. `Wiki/Concepts/apple
 **Semantic candidates** are pairs identified by conceptual overlap — synonyms, one being a strict subset of the other, or articles that would naturally be merged — without necessarily sharing sources. Perform this pass by running:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs read-concepts
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs read-concepts > /tmp/wiki-concepts.md
 ```
 
-This outputs all concept entries with their one-line descriptions. Use your judgment to identify semantically overlapping pairs from this list. Tag each as `detection: "semantic"`. Pairs found by both structural and semantic methods are tagged `detection: "structural+semantic"`. Skip the LLM pre-filter for semantic candidates — they were already identified by LLM judgment.
+Then read `/tmp/wiki-concepts.md` in full using the Read tool, using `offset`/`limit` to page through it if the file exceeds the Read tool's line limit. **Do not pipe through `head` or any other truncating command** — the concept list may be thousands of lines, and truncating it means missing potential duplicate pairs. Use your judgment to identify semantically overlapping pairs from the complete list. Tag each as `detection: "semantic"`. Pairs found by both structural and semantic methods are tagged `detection: "structural+semantic"`. Skip the LLM pre-filter for semantic candidates — they were already identified by LLM judgment.
 
 If no candidates remain, print `No duplicate candidates found.` and stop.
 
