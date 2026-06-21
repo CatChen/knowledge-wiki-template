@@ -88,6 +88,12 @@ jobs:
       test: wiki-index--find-missing-summaries--unindexed
       command: node scripts/wiki/wiki-index.mjs find-missing-summaries
 
+  find-missing-summaries--bracket-named:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-index--find-missing-summaries--bracket-named
+      command: node scripts/wiki/wiki-index.mjs find-missing-summaries
+
   find-missing-concepts--empty:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:

@@ -42,7 +42,7 @@ process.stdout.on('error', (err) => {
 });
 
 const CONCEPT_RE = /^- \[\[Wiki\/Concepts\/([^|]+)\|([^\]]+)\]\] — (.+)$/;
-const SUMMARY_RE = /^- \[\[Wiki\/Summaries\/([^\]]+)\]\] — (.+)$/;
+const SUMMARY_RE = /^- \[\[Wiki\/Summaries\/((?:[^\]]|\](?!\]))+)\]\] — (.+)$/;
 
 // --- Parsing and serialisation ---
 
