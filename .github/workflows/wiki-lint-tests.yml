@@ -40,6 +40,12 @@ jobs:
       test: wiki-lint--find-broken-concept-links--positive
       command: node scripts/wiki/wiki-lint.mjs find-broken-concept-links
 
+  find-broken-concept-links--bracket-named-source:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-broken-concept-links--bracket-named-source
+      command: node scripts/wiki/wiki-lint.mjs find-broken-concept-links
+
   find-ungrounded-concepts--empty:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
@@ -50,6 +56,12 @@ jobs:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-lint--find-ungrounded-concepts--positive
+      command: node scripts/wiki/wiki-lint.mjs find-ungrounded-concepts
+
+  find-ungrounded-concepts--bracket-named-source:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-lint--find-ungrounded-concepts--bracket-named-source
       command: node scripts/wiki/wiki-lint.mjs find-ungrounded-concepts
 
   find-orphan-concepts--empty:

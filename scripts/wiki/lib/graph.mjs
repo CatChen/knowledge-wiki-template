@@ -11,7 +11,7 @@ export function extractBody(content) {
 
 export function extractWikilinks(text) {
   const targets = [];
-  const re = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+  const re = /\[\[((?:[^\]|]|\](?!\]))+)(?:\|[^\]]+)?\]\]/g;
   let match;
   while ((match = re.exec(text)) !== null) {
     targets.push(match[1].trim());

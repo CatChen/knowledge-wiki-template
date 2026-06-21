@@ -102,7 +102,7 @@ function findUngroundedConcepts() {
     const validSourceCount = sourceBullets
       .flatMap((line) => {
         const targets = [];
-        const re = /\[\[([^\]|]+)(?:\|[^\]]+)?\]\]/g;
+        const re = /\[\[((?:[^\]|]|\](?!\]))+)(?:\|[^\]]+)?\]\]/g;
         let match;
         while ((match = re.exec(line)) !== null) targets.push(match[1].trim());
         return targets;
