@@ -20,7 +20,7 @@ jobs:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-concept--insert-source--file-not-found
-      command: node scripts/wiki/wiki-concept.mjs insert-source "my-topic" "Wiki/Summaries/NonExistent/Foo.summary" 2>&1 || true
+      command: node scripts/wiki/wiki-concept.mjs insert-source "my-topic" "Wiki/Summaries/NonExistent/Foo.summary" 2>&1; echo "exit_code=$?"
 
   insert-source--insert:
     uses: ./.github/workflows/wiki-test-runner.yml

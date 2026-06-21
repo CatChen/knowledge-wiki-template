@@ -50,7 +50,7 @@ jobs:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-index--upsert-summary--file-not-found
-      command: node scripts/wiki/wiki-index.mjs upsert-summary "NonExistent/Foo.summary" "desc" 2>&1 || true
+      command: node scripts/wiki/wiki-index.mjs upsert-summary "NonExistent/Foo.summary" "desc" 2>&1; echo "exit_code=$?"
 
   upsert-summary--insert:
     uses: ./.github/workflows/wiki-test-runner.yml
