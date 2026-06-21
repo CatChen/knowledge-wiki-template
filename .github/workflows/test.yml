@@ -24,3 +24,6 @@ jobs:
 
   wiki-backlinks:
     uses: ./.github/workflows/wiki-backlinks-tests.yml
+
+  wiki-summary:
+    uses: ./.github/workflows/wiki-summary-tests.yml
