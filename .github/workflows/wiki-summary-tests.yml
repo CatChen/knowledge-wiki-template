@@ -16,17 +16,15 @@ jobs:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-summary--create--empty-stdin
-      command: >-
-        node scripts/wiki/wiki-summary.mjs create "Notes/hello.md" </dev/null 2>/tmp/stderr.txt
-        && echo "exit:0" || echo "exit:$?"
+      command: node scripts/wiki/wiki-summary.mjs create "Notes/hello.md" </dev/null
+      expected_exit_code: 1
 
   create--source-not-found:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-summary--create--source-not-found
-      command: >-
-        printf 'content' | node scripts/wiki/wiki-summary.mjs create "Notes/nonexistent.md" 2>/tmp/stderr.txt
-        && echo "exit:0" || echo "exit:$?"
+      command: printf 'content' | node scripts/wiki/wiki-summary.mjs create "Notes/nonexistent.md"
+      expected_exit_code: 1
 
   create--unicode-filename:
     uses: ./.github/workflows/wiki-test-runner.yml
