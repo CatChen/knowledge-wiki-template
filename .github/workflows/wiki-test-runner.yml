@@ -16,6 +16,11 @@ on:
         required: true
         type: string
         description: Shell command to run (e.g. "node scripts/wiki/wiki-index.mjs sort")
+      expected_exit_code:
+        required: false
+        type: number
+        default: 0
+        description: Expected exit code of the command (default 0)
 
 jobs:
   run:
@@ -41,7 +46,17 @@ jobs:
       - name: Run command
         env:
           COMMAND: ${{ inputs.command }}
-        run: eval "$COMMAND" > /tmp/stdout.txt
+        run: eval "$COMMAND" > /tmp/stdout.txt 2> /tmp/stderr.txt && echo 0 > /tmp/exit_code.txt || { echo $? > /tmp/exit_code.txt; true; }
+
+      - name: Assert exit code
+        env:
+          EXPECTED: ${{ inputs.expected_exit_code }}
+        run: |
+          ACTUAL=$(cat /tmp/exit_code.txt)
+          if [ "$ACTUAL" != "$EXPECTED" ]; then
+            echo "Expected exit code $EXPECTED but got $ACTUAL"
+            exit 1
+          fi
 
       - name: Detect assertions
         id: detect
