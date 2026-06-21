@@ -15,10 +15,15 @@
  *       Find source files whose summary is missing or whose content has changed.
  *       Output: { "sources": ["rel/path.md", ...] }
  *
- *   create <source-path> [--at <ISO timestamp>]
- *       Create (or overwrite) a skeleton summary file for <source-path>
- *       (relative to KNOWLEDGE_DIR). Computes and writes the hash automatically.
- *       Prints the summary file rel-path so the skill knows where to edit.
+ *   create <source-path> [--tags "[tag1, tag2]"] [--at <ISO timestamp>]
+ *       Create (or overwrite) a summary file for <source-path> (relative to
+ *       KNOWLEDGE_DIR). Reads the summary body from stdin (required — pipe via
+ *       temp file). Tags are passed via --tags (optional, defaults to []).
+ *       Frontmatter (source, hash, summarized_at, type, _icon) and ## Backlinks
+ *       are written by the script. Prints the summary file rel-path on success.
+ *       Exits with an error if <source-path> does not exist or stdin is empty.
+ *       Example:
+ *         node scripts/wiki/wiki-summary.mjs create "Posts/Foo.md" --tags "[ai, writing]" < /tmp/body.md
  *
  *   delete-concept - | <summary-rel-path> <concept-slug>
  *       Remove all Key Concepts bullet entries for <concept-slug> from the summary.
@@ -138,6 +143,8 @@ function cmdCreate(args) {
 
   const atIdx = args.indexOf('--at');
   const timestamp = (atIdx !== -1 && args[atIdx + 1]) ? args[atIdx + 1] : new Date().toISOString();
+  const tagsIdx = args.indexOf('--tags');
+  const tags = (tagsIdx !== -1 && args[tagsIdx + 1]) ? args[tagsIdx + 1] : '[]';
 
   const srcFull = path.join(KNOWLEDGE_DIR, sourceRel);
   if (!fs.existsSync(srcFull)) {
@@ -153,32 +160,31 @@ function cmdCreate(args) {
 
   // Backlink target: source path without extension
   const backlinkTarget = sourceRel.replace(/\.(md|markdown)$/i, '');
+  const backlinksSection = `## Backlinks\n\n- Source file: [[${backlinkTarget}]]\n`;
 
-  const skeleton = [
+  // Body is always read from stdin — write frontmatter + body + backlinks in one shot.
+  const body = fs.readFileSync(0, 'utf8').trimEnd();
+  if (!body) {
+    console.error('Body is required: pipe content via temp file');
+    process.exit(1);
+  }
+
+  const content = [
     '---',
     `source: ${sourceRel}`,
     `hash: ${hash}`,
     `summarized_at: ${timestamp}`,
     'type: Summary',
     '_icon: gear',
-    'tags: []',
+    `tags: ${tags}`,
     '---',
     '',
-    '# ',
+    body,
     '',
-    '## Summary',
-    '',
-    '## Key Concepts',
-    '',
-    '## Notable Details',
-    '',
-    '## Backlinks',
-    '',
-    `- Source file: [[${backlinkTarget}]]`,
-    '',
+    backlinksSection,
   ].join('\n');
 
-  fs.writeFileSync(summaryFull, skeleton, 'utf8');
+  fs.writeFileSync(summaryFull, content, 'utf8');
   console.log(summaryRel);
 }
 

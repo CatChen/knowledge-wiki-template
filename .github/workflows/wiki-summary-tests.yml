@@ -1,0 +1,35 @@
+name: wiki-summary.mjs Tests
+
+on:
+  workflow_call:
+
+jobs:
+  create--with-tags:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-summary--create--with-tags
+      command: >-
+        printf '# Hello World\n\n## Summary\nTest summary.\n\n## Key Concepts\n\n## Notable Details\n'
+        | node scripts/wiki/wiki-summary.mjs create "Notes/hello.md" --tags "[test, hello]" --at "2024-01-01T00:00:00.000Z"
+
+  create--empty-stdin:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-summary--create--empty-stdin
+      command: node scripts/wiki/wiki-summary.mjs create "Notes/hello.md" </dev/null
+      expected_exit_code: 1
+
+  create--source-not-found:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-summary--create--source-not-found
+      command: printf 'content' | node scripts/wiki/wiki-summary.mjs create "Notes/nonexistent.md"
+      expected_exit_code: 1
+
+  create--unicode-filename:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-summary--create--unicode-filename
+      command: >-
+        printf '# Title\n\n## Summary\nSummary text.\n\n## Key Concepts\n\n## Notable Details\n'
+        | node scripts/wiki/wiki-summary.mjs create "Notes/It’s Here.md" --tags "[test]" --at "2024-01-01T00:00:00.000Z"
