@@ -34,7 +34,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'fs';
 import path from 'path';
 import { getBulletsFromSection } from './lib/sections.mjs';
-import { INDEX_PATH, KNOWLEDGE_DIR } from './lib/paths.mjs';
+import { INDEX_PATH, KNOWLEDGE_DIR, SUMMARIES_DIR } from './lib/paths.mjs';
 
 // Suppress EPIPE errors when output is piped to head, less, etc.
 process.stdout.on('error', (err) => {
@@ -132,9 +132,7 @@ switch (cmd) {
     const [slug, displayName, ...descParts] = args;
     const description = descParts.join(' ');
     if (!slug || !displayName || !description) {
-      process.stderr.write(
-        'Usage: upsert-concept <slug> "<display-name>" "<description>"\n',
-      );
+      console.error('Usage: upsert-concept <slug> "<display-name>" "<description>"');
       process.exit(1);
     }
     const { concepts, summaries } = parseIndex();
@@ -155,13 +153,13 @@ switch (cmd) {
   case 'delete-concept': {
     const [slug] = args;
     if (!slug) {
-      process.stderr.write('Usage: delete-concept <slug>\n');
+      console.error('Usage: delete-concept <slug>');
       process.exit(1);
     }
     const { concepts, summaries } = parseIndex();
     const idx = concepts.findIndex((l) => CONCEPT_RE.exec(l)?.[1] === slug);
     if (idx === -1) {
-      process.stderr.write(`Error: concept '${slug}' not found.\n`);
+      console.error(`Error: concept '${slug}' not found.`);
       process.exit(1);
     }
     concepts.splice(idx, 1);
@@ -175,9 +173,12 @@ switch (cmd) {
     const [relPath, ...descParts] = args;
     const description = descParts.join(' ');
     if (!relPath || !description) {
-      process.stderr.write(
-        'Usage: upsert-summary "<rel-path>" "<description>"\n',
-      );
+      console.error('Usage: upsert-summary "<rel-path>" "<description>"');
+      process.exit(1);
+    }
+    const summaryFile = path.join(SUMMARIES_DIR, `${relPath}.md`);
+    if (!existsSync(summaryFile)) {
+      console.error(`Error: summary file not found: Wiki/Summaries/${relPath}.md`);
       process.exit(1);
     }
     const { concepts, summaries } = parseIndex();
@@ -198,13 +199,13 @@ switch (cmd) {
   case 'delete-summary': {
     const [relPath] = args;
     if (!relPath) {
-      process.stderr.write('Usage: delete-summary "<rel-path>"\n');
+      console.error('Usage: delete-summary "<rel-path>"');
       process.exit(1);
     }
     const { concepts, summaries } = parseIndex();
     const idx = summaries.findIndex((l) => SUMMARY_RE.exec(l)?.[1] === relPath);
     if (idx === -1) {
-      process.stderr.write(`Error: summary '${relPath}' not found.\n`);
+      console.error(`Error: summary '${relPath}' not found.`);
       process.exit(1);
     }
     summaries.splice(idx, 1);
@@ -300,7 +301,7 @@ switch (cmd) {
   }
 
   default: {
-    process.stderr.write(
+    console.error(
       [
         `Unknown command: ${cmd ?? '(none)'}`,
         '',
@@ -315,7 +316,7 @@ switch (cmd) {
         '  find-missing-summaries',
         '  find-missing-concepts',
         '  delete-dead-links',
-      ].join('\n') + '\n',
+      ].join('\n'),
     );
     process.exit(1);
   }

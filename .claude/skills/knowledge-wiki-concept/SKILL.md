@@ -78,6 +78,7 @@ Derive the summary's link-path by stripping the `.md` extension from the summary
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-source "{concept-slug}" "{summary-link-path}"
    ```
+   If `insert-source` fails with `summary file not found`, the `{summary-link-path}` may have been transcribed incorrectly (e.g. a curly apostrophe retyped as a straight one). Run `ls "{KNOWLEDGE_PATH}/$(dirname "{summary-link-path}")"` to find the exact filename on disk, correct the path, and retry.
 
 ---
 
@@ -90,6 +91,7 @@ Derive the summary's link-path by stripping the `.md` extension from the summary
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-source "{concept-slug}" "{summary-link-path}"
    ```
+   If `insert-source` fails with `summary file not found`, see the recovery step above.
 
 ---
 

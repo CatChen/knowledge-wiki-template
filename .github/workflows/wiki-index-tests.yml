@@ -46,6 +46,12 @@ jobs:
       test: wiki-index--delete-concept
       command: node scripts/wiki/wiki-index.mjs delete-concept "my-topic"
 
+  upsert-summary--file-not-found:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-index--upsert-summary--file-not-found
+      command: node scripts/wiki/wiki-index.mjs upsert-summary "NonExistent/Foo.summary" "desc" 2>&1 || true
+
   upsert-summary--insert:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:

@@ -36,12 +36,13 @@
  */
 
 import fs from 'fs';
+import path from 'path';
 import {
   sectionContains,
   insertBulletInSection,
   deleteBulletFromSection,
 } from './lib/sections.mjs';
-import { CONCEPTS_DIR, conceptFullPath, conceptRelPath } from './lib/paths.mjs';
+import { CONCEPTS_DIR, KNOWLEDGE_DIR, conceptFullPath, conceptRelPath } from './lib/paths.mjs';
 
 process.stdout.on('error', err => { if (err.code === 'EPIPE') process.exit(0); });
 
@@ -103,6 +104,12 @@ function cmdInsertSource(args) {
   const [slug, summaryPath] = args;
   if (!slug || !summaryPath) {
     console.error('Usage: node scripts/wiki/wiki-concept.mjs insert-source <slug> <summary-path>');
+    process.exit(1);
+  }
+
+  const summaryFile = path.join(KNOWLEDGE_DIR, `${summaryPath}.md`);
+  if (!fs.existsSync(summaryFile)) {
+    console.error(`Error: summary file not found: ${summaryPath}.md`);
     process.exit(1);
   }
 

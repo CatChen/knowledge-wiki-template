@@ -215,6 +215,7 @@ For each rel-path in the array:
    ```bash
    node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-summary "{rel-path}" "{description}"
    ```
+   If `upsert-summary` fails with `summary file not found`, use the exact rel-path string from the `find-missing-summaries` JSON output verbatim — do not retype it.
 
 ---
 

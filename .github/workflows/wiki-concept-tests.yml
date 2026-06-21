@@ -16,6 +16,12 @@ jobs:
       test: wiki-concept--create--synthesis
       command: node scripts/wiki/wiki-concept.mjs create "my-topic" "My Topic" --type Synthesis --icon notepad
 
+  insert-source--file-not-found:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-concept--insert-source--file-not-found
+      command: node scripts/wiki/wiki-concept.mjs insert-source "my-topic" "Wiki/Summaries/NonExistent/Foo.summary" 2>&1 || true
+
   insert-source--insert:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
