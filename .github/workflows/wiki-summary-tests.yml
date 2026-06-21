@@ -16,15 +16,17 @@ jobs:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-summary--create--empty-stdin
-      command: |-
-        node scripts/wiki/wiki-summary.mjs create "Notes/hello.md" </dev/null 2>/tmp/stderr.txt; echo "exit:$?"
+      command: >-
+        node scripts/wiki/wiki-summary.mjs create "Notes/hello.md" </dev/null 2>/tmp/stderr.txt
+        && echo "exit:0" || echo "exit:$?"
 
   create--source-not-found:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
       test: wiki-summary--create--source-not-found
-      command: |-
-        printf 'content' | node scripts/wiki/wiki-summary.mjs create "Notes/nonexistent.md" 2>/tmp/stderr.txt; echo "exit:$?"
+      command: >-
+        printf 'content' | node scripts/wiki/wiki-summary.mjs create "Notes/nonexistent.md" 2>/tmp/stderr.txt
+        && echo "exit:0" || echo "exit:$?"
 
   create--unicode-filename:
     uses: ./.github/workflows/wiki-test-runner.yml
@@ -32,4 +34,4 @@ jobs:
       test: wiki-summary--create--unicode-filename
       command: >-
         printf '# Title\n\n## Summary\nSummary text.\n\n## Key Concepts\n\n## Notable Details\n'
-        | node scripts/wiki/wiki-summary.mjs create "Notes/It's Here.md" --tags "[test]" --at "2024-01-01T00:00:00.000Z"
+        | node scripts/wiki/wiki-summary.mjs create "Notes/It’s Here.md" --tags "[test]" --at "2024-01-01T00:00:00.000Z"
