@@ -32,10 +32,12 @@ Store this list as `RECENT_SUMMARIES`. These paths are used as a priority signal
 Run:
 
 ```bash
-node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs read-concepts
+node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs read-concepts > /tmp/wiki-concepts.md
 ```
 
-Keep the output in memory for step 4. Each line is one concept entry in the form:
+Then read `/tmp/wiki-concepts.md` in full using the Read tool, using `offset` and `limit` to page through it if the file exceeds the Read tool's line limit. **Do not pipe through `head` or any other truncating command** — the concept list may be thousands of lines, and truncating it means missing potential synthesis candidates.
+
+Each line is one concept entry in the form:
 
 ```
 - [[Wiki/Concepts/{slug}|{Display Name}]] — {one-line description}
