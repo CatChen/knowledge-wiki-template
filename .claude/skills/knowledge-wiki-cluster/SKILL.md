@@ -1,17 +1,19 @@
 ---
 name: knowledge-wiki-cluster
-description: 'Find groups of concepts that share an implied parent slug and handle them: if the parent does not exist, create it; if it already exists, link unconnected children to it. For each child, fold (merge content into parent and delete child) or skip (keep as standalone, linked to parent). Net result: fewer total concepts and a fully linked hierarchy. Run after accumulating new concepts or when the wiki has clusters of narrowly-named sub-concepts without a parent.'
+description: 'Find groups of concepts that share an implied parent slug and handle them: if the parent does not exist, create it; if it already exists, link unconnected children to it. For each child, fold (merge content into parent and delete child), link (keep as standalone, linked to parent), or merge into a sibling that already covers its content. Net result: fewer total concepts and a fully linked hierarchy. Run after accumulating new concepts or when the wiki has clusters of narrowly-named sub-concepts without a parent.'
 ---
 
 # Knowledge Wiki Cluster
 
-Detect clusters of concepts that share an implied parent slug, then decide for each child whether to **fold** (merge content into parent and delete the child) or **skip** (keep the child as a standalone concept linked to the parent). The goal is to reduce total concept count by absorbing thin, redundant, or retired sub-concepts into a parent article.
+Detect clusters of concepts that share an implied parent slug, then decide for each child whether to **fold** (merge content into parent and delete the child) or **link** (keep the child as a standalone concept linked to the parent). The goal is to reduce total concept count by absorbing thin, redundant, or retired sub-concepts into a parent article.
 
 Two cluster types are handled:
-- **New-parent** (`parentExists: false`): the implied parent concept does not exist yet — create it, then fold/skip children.
-- **Existing-parent** (`parentExists: true`): the implied parent already exists and these children have not yet been dismissed — fold/skip each one.
+- **New-parent** (`parentExists: false`): the implied parent concept does not exist yet — create it, then fold/link/merge children.
+- **Existing-parent** (`parentExists: true`): the implied parent already exists and these children have not yet been dismissed — fold/link/merge each one.
 
-For new-parent clusters, each concept is grouped under its non-existing prefix ancestors up to (but not including) its nearest existing ancestor — so `apple-watch-ultra` forms an `[apple-watch]` cluster when `apple-watch.md` is absent, even if `apple.md` exists. For existing-parent clusters, the concept is grouped directly at its nearest existing ancestor. Presents one cluster at a time with a batch fold/skip recommendation — you confirm, override, or dismiss.
+For new-parent clusters, each concept is grouped under its non-existing prefix ancestors up to (but not including) its nearest existing ancestor — so `apple-watch-ultra` forms an `[apple-watch]` cluster when `apple-watch.md` is absent, even if `apple.md` exists. For existing-parent clusters, the concept is grouped directly at its nearest existing ancestor. Presents one cluster at a time with a batch recommendation — you confirm, override, or dismiss.
+
+Within a cluster, children may also be merged into each other (**sibling merging**) before any folding into the parent. A child judged not worth folding into the parent — an **Anchor** — can absorb another child's content if that child — a **Fold-candidate** — is a strict subset of the Anchor's content. The absorbed Fold-candidate is merged into the Anchor and deleted; the Anchor is recommended to stay standalone and is not expected to be folded into the parent.
 
 ## Steps
 
@@ -29,12 +31,12 @@ node {KNOWLEDGE_PATH}/scripts/wiki/candidates.mjs find-implied-parent-concepts
 
 This outputs `{ "clusters": [...] }` sorted **deepest first** (most hyphens in `impliedParent`), with ties broken by cluster size descending. Both new-parent and existing-parent clusters are interleaved in this single ordering. Each entry has:
 - `impliedParent` — the parent slug
-- `children` — array of concept file paths (e.g. `Wiki/Concepts/audi-etron.md`)
-- `parentExists` — `false` if the parent concept needs to be created; `true` if it already exists and these children have not yet been dismissed
+- `children` — array of `{ path, dismissed }` objects, where `path` is the concept file path (e.g. `Wiki/Concepts/audi-etron.md`) and `dismissed` is `true` if this child was previously dismissed from this cluster pair, `false` otherwise
+- `parentExists` — `false` if the parent concept needs to be created; `true` if it already exists
 
-Previously dismissed children are already filtered out.
+A cluster appears only when it has at least the usual number of `dismissed: false` children (≥2 for new-parent, ≥1 for existing-parent). Previously dismissed children are included with `dismissed: true` as potential Anchor targets for sibling merges.
 
-Derive each child's slug from its filename: `Wiki/Concepts/audi-etron.md` → `audi-etron`. Use this slug wherever `{child-slug}` appears below.
+Derive each child's slug from its `path` field: `Wiki/Concepts/audi-etron.md` → `audi-etron`. Use this slug wherever `{child-slug}` appears below.
 
 If the `clusters` array is empty, print `No clusters found.` and stop.
 
@@ -64,7 +66,12 @@ Determine the **Display Name** for the implied parent before presenting:
 - If `parentExists` is `true`, read the parent concept file and take the Display Name from its H1 heading (`# …`). This preserves the exact capitalisation already in use (e.g. `ios` → "iOS", `macos` → "macOS").
 - If `parentExists` is `false`, derive a human-readable name from the slug (e.g. `audi` → `Audi`, `apple-watch` → `Apple Watch`, `career` → `Career`).
 
-Read every child concept file. Present a cluster summary as a 3-column table with each child's description and fold/skip recommendation inline. Output the table as a **normal assistant message** (not in a code block) so it renders — this message must be sent **before** calling any interactive question tool:
+Read every child concept file, then classify each one in two passes:
+
+1. **Fold vs. Anchor.** `dismissed: true` children are **Anchors** automatically — the previous decision that they don't belong as primary children of this parent stands; no independent judgment needed. For `dismissed: false` children, independently judge each as a **Fold-candidate** (thin, narrow, or low-standalone-value — would fold into the parent) or an **Anchor** (substantive: rich prose, multiple sources, or broad cross-links — would stay standalone). This judgment must not depend on any other child in the cluster.
+2. **Sibling merges.** For each `dismissed: false` Fold-candidate, check whether its content is a **strict subset** of any Anchor's content in the same cluster (whether that Anchor is `dismissed: true` or `dismissed: false`) — i.e. the Fold-candidate adds nothing the Anchor doesn't already cover, not merely "related" or "similar". If so, recommend **Merge into `{anchor-slug}`** instead of Fold. Anchors only absorb — an Anchor is recommended to stay standalone and is not expected to be folded or merged away.
+
+Present a cluster summary as a 3-column table with each child's description and recommendation inline. Output the table as a **normal assistant message** (not in a code block) so it renders — this message must be sent **before** calling any interactive question tool:
 
 ---
 **Cluster: {Display Name}  ({N} children, {existing parent | new parent})**
@@ -72,36 +79,36 @@ Read every child concept file. Present a cluster summary as a 3-column table wit
 | Child | Description | Recommendation |
 |-------|-------------|----------------|
 | `{child-slug}` | {one-sentence description} | **Fold** — {reason} |
-| `{child-slug}` | {one-sentence description} | **Skip** — {reason} |
+| `{child-slug}` | {one-sentence description} | **Link** — {reason} |
+| `{child-slug}` *(dismissed)* | {one-sentence description} | **Link** — previously dismissed; auto-classified as Anchor |
+| `{child-slug}` | {one-sentence description} | **Merge into `{anchor-slug}`** — {reason: what subset of the anchor's content this duplicates} |
 
 ---
 
-Then write 1–2 sentences of reasoning: what the children have in common and whether creating a parent would add meaningful value.
-
-Use these criteria — **Fold** for thin, narrow, or low-standalone-value concepts; **Skip** for substantive articles with rich prose, multiple sources, or broad cross-links.
+Then write 1–2 sentences of reasoning: what the children have in common, whether creating a parent would add meaningful value, and call out any proposed sibling merges.
 
 #### 4b. Ask what to do
 
 Use **"What would you like to do with the {Display Name} cluster?"** as the question text. **Never** put `(Recommended)` on Dismiss. The remaining guidance differs by cluster type:
 
-**If `parentExists` is `false`** (new-parent cluster): Add `(Recommended)` to Proceed only when the cluster is a clear brand, product line, or named topic with 3+ children that obviously belong under it **and** at least one child is recommended for folding. If all children are Skip, the parent is still worth creating as an overview but is not strongly recommended.
+**If `parentExists` is `false`** (new-parent cluster): Add `(Recommended)` to Proceed only when the cluster is a clear brand, product line, or named topic with 3+ children that obviously belong under it **and** at least one child is recommended for folding or merging into a sibling.
 
 | # | Option | Description |
 |---|--------|-------------|
-| 1 | `Proceed` | Create "{Display Name}" and apply the fold/skip recommendations above |
-| 2 | `Link all` | Create "{Display Name}" and link all children to it, keeping them standalone |
-| 3 | `Fold all` | Create "{Display Name}" and fold every child into it |
+| 1 | `Proceed` | Create "{Display Name}" and apply the recommendations above (fold, link, or merge into a sibling) |
+| 2 | `Link all` | Create "{Display Name}" and link all children to it, keeping them standalone (overrides any sibling-merge recommendations) |
+| 3 | `Fold all` | Create "{Display Name}" and fold every child into it (overrides any sibling-merge recommendations) |
 | 4 | `Dismiss` | These don't belong together; never show this cluster again (no parent created) |
 
 Users may also type `skip` (leave for now; show again next run), `review one by one` (create parent then decide each child individually), or `stop` (halt all remaining clusters) in the Other field.
 
-**If `parentExists` is `true`** (existing-parent cluster): Add `(Recommended)` to Proceed when at least one child is recommended for folding.
+**If `parentExists` is `true`** (existing-parent cluster): Add `(Recommended)` to Proceed when at least one child is recommended for folding or merging into a sibling.
 
 | # | Option | Description |
 |---|--------|-------------|
-| 1 | `Proceed` | Ensure bidirectional links to "{Display Name}" and apply the fold/skip recommendations above |
-| 2 | `Link all` | Link all children to "{Display Name}" but keep them standalone |
-| 3 | `Fold all` | Link all children to "{Display Name}" and fold every child into it |
+| 1 | `Proceed` | Ensure bidirectional links to "{Display Name}" and apply the recommendations above (fold, link, or merge into a sibling) |
+| 2 | `Link all` | Link all children to "{Display Name}" but keep them standalone (overrides any sibling-merge recommendations) |
+| 3 | `Fold all` | Link all children to "{Display Name}" and fold every child into it (overrides any sibling-merge recommendations) |
 | 4 | `Dismiss` | The slug prefix is coincidental; never show this cluster again (no links created) |
 
 Users may also type `skip` (leave for now; show again next run), `review one by one` (link to parent then decide each child individually), or `stop` (halt all remaining clusters) in the Other field.
@@ -112,17 +119,46 @@ The user must still be able to see the full decision context while choosing: the
 
 ---
 
-#### 4c. If Proceed, Link all, Fold all, or Review one by one was selected
+#### 4c. Collecting and executing decisions
 
-Record decisions in memory based on the selection:
-- **Proceed**: fold the children listed under Recommend Fold; skip the rest
-- **Link all**: skip every child
-- **Fold all**: fold every child
-- **Review one by one**: ask about each child individually (see below), then proceed
+Do not create or edit any files until all decisions are collected. If `stop` is entered at any point during decision collection, proceed to section 4f without creating any files.
 
-Do not create or edit any files until all decisions are collected. If `stop` was entered at any point, proceed to section 4f without creating any files.
+#### 4c.1 If Proceed
 
-**Review one by one:** Process one child at a time. Present your recommendation and reasoning for that child, then ask:
+Record the 4a table recommendations as final decisions — Fold into the parent, Link (Anchor), or Merge into `{anchor-slug}` for each child. Proceed to **4c.5**.
+
+#### 4c.2 If Link all
+
+Record every `dismissed: false` child as Link (standalone), overriding any sibling-merge or fold recommendations. `dismissed: true` children are unaffected — they remain background Anchors. Proceed to **4c.5**.
+
+#### 4c.3 If Fold all
+
+Record every `dismissed: false` child as Fold into the parent, overriding any sibling-merge recommendations. `dismissed: true` children are never folded — they are Anchors by definition and remain standalone. Proceed to **4c.5**.
+
+#### 4c.4 If Review one by one
+
+Process sibling-merge candidates first, then remaining children.
+
+For each Anchor that has one or more Fold-candidates recommended to merge into it (per the 4a table), present your reasoning, then ask:
+
+When using an interactive question/options tool, keep the question text short: **"Merge {Fold-candidate display name(s)} into {Anchor display name}?"** Do not cram the recommendation, reasoning, or option details into one long question line.
+
+The user must still be able to see the full decision context while choosing: the recommendation, reasoning, both options, and the `done`/`stop` instructions. This context may be in the tool's body/details area, or in an immediately preceding assistant message if that message remains expanded and visible while the dialog is open. If the available question tool cannot keep that context visible together with the options, do not use it for this prompt. Instead, render the recommendation, reasoning, numbered options, and reply instructions as one normal markdown message, then wait for the user's reply.
+
+Use these options (add `(Recommended)` to whichever applies):
+
+| # | Option | Description |
+|---|--------|-------------|
+| 1 | `Merge into "{Anchor display name}"` | Merge the listed child(ren)'s content into "{Anchor display name}", then delete them. "{Anchor display name}" stays standalone |
+| 2 | `Decline` | Keep the listed child(ren) separate; each will be reviewed individually below |
+
+Accept: `1` (Merge), `2` (Decline), `done` (proceed with decisions collected so far — unprocessed Anchors are treated as Decline and unprocessed remaining children are treated as Link), or `stop`.
+
+If `stop` was entered, proceed to section 4f without creating any files.
+
+If declined, each listed Fold-candidate falls back to individual review below.
+
+For every remaining `dismissed: false` child — Fold-candidates not absorbed by an Anchor (via Decline or no Anchor match), and `dismissed: false` Anchors — process one at a time. (`dismissed: true` Anchors are not re-evaluated here; they only appear as sibling-merge targets in the Anchor-confirmation step above.) Present your recommendation and reasoning for that child, then ask:
 
 When using an interactive question/options tool, keep the question text short: **"What should happen to {child-display-name}?"** Do not cram the recommendation, reasoning, or option details into one long question line.
 
@@ -133,17 +169,17 @@ Use these options (add `(Recommended)` to whichever applies):
 | # | Option | Description |
 |---|--------|-------------|
 | 1 | `Fold "{child-display-name}" into "{Display Name}"` | Merge child's content into parent, then delete child |
-| 2 | `Skip "{child-display-name}"` | Keep child standalone; will be linked to parent |
+| 2 | `Link "{child-display-name}"` | Keep child standalone; will be linked to parent |
 
-Accept: `1` (Fold), `2` (Skip), `done` (proceed with decisions collected so far — unprocessed children will be treated as Skip), or `stop`.
+Accept: `1` (Fold), `2` (Link), `done` (proceed with decisions collected so far — unprocessed children will be treated as Link), or `stop`.
 
 If `stop` was entered, proceed to section 4f without creating any files.
 
-**After collecting all decisions, create and populate the parent concept:**
+#### 4c.5 After collecting decisions
 
-If `parentExists` is `true`, the parent concept file already exists — skip ahead to **Link all children bidirectionally**.
+If `parentExists` is `true`, the parent concept file already exists — skip ahead to **Execute sibling merges**.
 
-If `parentExists` is `false`, run these steps:
+If `parentExists` is `false` and at least one `dismissed: false` child has a final outcome of Fold or Link, create the parent concept:
 
 ```bash
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs create "{impliedParent}" "{Display Name}" --type Synthesis --icon notepad
@@ -157,20 +193,28 @@ Read the file, then insert a 1–3 paragraph topic overview between `# {Display 
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-index.mjs upsert-concept "{impliedParent}" "{Display Name}" "{one-line English description}"
 ```
 
-**Link all children bidirectionally (idempotent):**
+**Execute sibling merges:**
 
-For each child, derive its display name from its H1 heading (`# …`). Run both commands — the first adds the child to the parent's Connected Concepts, the second adds the parent to the child's:
+For each child whose final outcome is Merge into `{anchor-slug}`, execute the `knowledge-wiki-merge` step 3c with this mapping:
+- **primary** = anchor: slug `{anchor-slug}`, display name `{anchor-display-name}`, path `Wiki/Concepts/{anchor-slug}.md`
+- **secondary** = child: slug `{child-slug}`, display name `{child-display-name}`, path `Wiki/Concepts/{child-slug}.md`
+
+Run this before linking or folding — a merged-away child is deleted and must not be linked to the parent or folded into it.
+
+**Link children bidirectionally (idempotent):**
+
+For each `dismissed: false` child with final outcome Link, derive its display name from its H1 heading (`# …`). Run both commands — the first adds the child to the parent's Connected Concepts, the second adds the parent to the child's:
 
 ```bash
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{impliedParent}" "{child-slug}" "{child-display-name}"
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-concept.mjs insert-connected-concept "{child-slug}" "{impliedParent}" "{Display Name}"
 ```
 
-Run this for every child regardless of fold/skip decision.
+`dismissed: true` Anchors are never linked to the parent, even if they absorbed a sibling merge — the previous decision not to connect them stands.
 
-**Record skipped children:**
+**Record linked children:**
 
-For each child where Skip was chosen, record a dismissed pair so the child is not re-evaluated in future runs. Run this after the link commands above succeed:
+For each `dismissed: false` child where Link was chosen, record a dismissed pair so the child is not re-evaluated in future runs. (`dismissed: true` children already have a dismissed pair recorded — do not run this for them.) Run this after the link commands above succeed:
 
 ```bash
 node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs dismiss-pair knowledge-wiki-cluster "Wiki/Concepts/{impliedParent}.md" "Wiki/Concepts/{child-slug}.md"
@@ -178,7 +222,7 @@ node {KNOWLEDGE_PATH}/scripts/wiki/wiki-state.mjs dismiss-pair knowledge-wiki-cl
 
 **Execute folds:**
 
-For each child where Fold was chosen, execute the `knowledge-wiki-merge` step 3c with this mapping:
+For each `dismissed: false` child where Fold was chosen, execute the `knowledge-wiki-merge` step 3c with this mapping:
 - **primary** = parent: slug `{impliedParent}`, display name `{Display Name}`, path `Wiki/Concepts/{impliedParent}.md`
 - **secondary** = child: slug `{child-slug}`, display name `{child-display-name}`, path `Wiki/Concepts/{child-slug}.md`
 
@@ -226,6 +270,9 @@ Created {N} concept(s):
   - {impliedParent} — {Display Name}
       Folded {Nf} child(ren): {child-slug}, {child-slug}, ...
       Not folded {Nn} child(ren): {child-slug}, {child-slug}, ...
+
+Merged {N} child(ren) into sibling(s):
+  - {child-slug} → {anchor-slug}
 
 Dismissed {N} cluster(s):
   - [{impliedParent}]

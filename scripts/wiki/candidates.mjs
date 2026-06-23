@@ -66,27 +66,32 @@ export function findImpliedParentConcepts() {
     if (parts.length < 2) continue;
     for (let len = parts.length - 1; len >= 1; len--) {
       const prefix = parts.slice(0, len).join('-');
+      const dismissed = isClusterPairDismissed(prefix, slug);
       if (slugSet.has(prefix)) {
-        if (!isClusterPairDismissed(prefix, slug)) {
-          if (!existingParentGroups[prefix]) existingParentGroups[prefix] = [];
-          existingParentGroups[prefix].push(`Wiki/Concepts/${slug}.md`);
-        }
+        if (!existingParentGroups[prefix]) existingParentGroups[prefix] = [];
+        existingParentGroups[prefix].push({ path: `Wiki/Concepts/${slug}.md`, dismissed });
         break;
       }
-      if (!isClusterPairDismissed(prefix, slug)) {
-        if (!groups[prefix]) groups[prefix] = [];
-        groups[prefix].push(`Wiki/Concepts/${slug}.md`);
-      }
+      if (!groups[prefix]) groups[prefix] = [];
+      groups[prefix].push({ path: `Wiki/Concepts/${slug}.md`, dismissed });
     }
   }
 
   const newParentClusters = Object.entries(groups)
-    .filter(([, children]) => children.length >= 2)
-    .map(([impliedParent, children]) => ({ impliedParent, children: children.sort(), parentExists: false }));
+    .filter(([, children]) => children.filter((c) => !c.dismissed).length >= 2)
+    .map(([impliedParent, children]) => ({
+      impliedParent,
+      children: children.sort((a, b) => a.path.localeCompare(b.path)),
+      parentExists: false,
+    }));
 
   const existingParentClusters = Object.entries(existingParentGroups)
-    .filter(([, children]) => children.length >= 1)
-    .map(([impliedParent, children]) => ({ impliedParent, children: children.sort(), parentExists: true }));
+    .filter(([, children]) => children.filter((c) => !c.dismissed).length >= 1)
+    .map(([impliedParent, children]) => ({
+      impliedParent,
+      children: children.sort((a, b) => a.path.localeCompare(b.path)),
+      parentExists: true,
+    }));
 
   const clusters = [...newParentClusters, ...existingParentClusters].sort((a, b) => {
     const depthDiff = b.impliedParent.split('-').length - a.impliedParent.split('-').length;
