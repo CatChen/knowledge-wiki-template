@@ -1,0 +1,10 @@
+{
+  "knowledge-wiki-cluster": {
+    "dismissedPairs": [
+      [
+        "Wiki/Concepts/apple.md",
+        "Wiki/Concepts/apple-vision-pro.md"
+      ]
+    ]
+  }
+}

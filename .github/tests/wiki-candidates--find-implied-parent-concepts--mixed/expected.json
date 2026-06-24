@@ -1,0 +1,13 @@
+{
+  "clusters": [
+    {
+      "impliedParent": "apple",
+      "children": [
+        { "path": "Wiki/Concepts/apple-tv.md", "dismissed": false },
+        { "path": "Wiki/Concepts/apple-vision-pro.md", "dismissed": true },
+        { "path": "Wiki/Concepts/apple-watch.md", "dismissed": false }
+      ],
+      "parentExists": false
+    }
+  ]
+}

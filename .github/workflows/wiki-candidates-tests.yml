@@ -40,6 +40,12 @@ jobs:
       test: wiki-candidates--find-implied-parent-concepts--dismissed
       command: node scripts/wiki/candidates.mjs find-implied-parent-concepts
 
+  find-implied-parent-concepts--mixed:
+    uses: ./.github/workflows/wiki-test-runner.yml
+    with:
+      test: wiki-candidates--find-implied-parent-concepts--mixed
+      command: node scripts/wiki/candidates.mjs find-implied-parent-concepts
+
   find-thin-concepts--empty:
     uses: ./.github/workflows/wiki-test-runner.yml
     with:
