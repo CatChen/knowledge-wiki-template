@@ -3,8 +3,8 @@
     {
       "impliedParent": "apple",
       "children": [
-        "Wiki/Concepts/apple-tv.md",
-        "Wiki/Concepts/apple-watch.md"
+        { "path": "Wiki/Concepts/apple-tv.md", "dismissed": false },
+        { "path": "Wiki/Concepts/apple-watch.md", "dismissed": false }
       ],
       "parentExists": false
     }
